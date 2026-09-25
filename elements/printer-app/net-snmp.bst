@@ -5,8 +5,8 @@ sources:
   - kind: git_repo
     url: github:net-snmp/net-snmp.git
     track: v5.9.*
-    # source-tag: v5.9.4
-    ref: 7d38b8299e26708ee92c9fe1628e5a000bc23e17
+    # source-tag: v5.9.5
+    ref: 95ce5af8b59ce02d458da818b4d71606d5b161f4
 
 build-depends:
   - fsdk-containers.bst:freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
