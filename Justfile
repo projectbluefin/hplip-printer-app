@@ -25,7 +25,7 @@ fetch:
     just bst source fetch --ignore-project-source-remotes --source-remote https://cache.projectbluefin.io:11001 --deps all oci/hplip-printer-app.bst
 
 build:
-    just bst build --ignore-project-source-remotes --source-remote https://cache.projectbluefin.io:11001 oci/hplip-printer-app.bst
+    just bst build oci/hplip-printer-app.bst
     just export
 
 export:
