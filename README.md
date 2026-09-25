@@ -101,6 +101,42 @@ appliance a different port and hostname so DNS-SD advertisements do not
 collide. Physical device discovery, plugin firmware load and paper output
 remain unverified without supported hardware.
 
+### Isolating LAN discovery and USB access between coexisting appliances
+
+When more than one printer-family appliance (for example this HPLIP image
+alongside a separate Ghostscript or PostScript printer-app) runs on the same
+host, each container must be its own DNS-SD and USB owner:
+
+- **Persistent state**: bind-mount a *dedicated* host volume per appliance to
+  `/var/lib/hplip-printer-app` (`podman unshare chown 65532:65532 <dir>`
+  first). Settings, the CUPS `snmp.conf`, USB quirk rules and any added
+  printers live only in that volume and survive container restarts without
+  being overwritten, because the entrypoint only seeds defaults for files
+  that do not already exist in the volume.
+- **Port**: set a distinct `PORT` (1024-65535) per appliance via `-e
+  PORT=<port>`; the entrypoint rejects a non-numeric or out-of-range value
+  before starting any service (exit code 64).
+- **DNS-SD advertisement**: set a distinct `--hostname` per appliance.
+  `avahi-daemon` runs with no configured `host-name` override, so it
+  advertises under the container's own hostname; two appliances given
+  different hostnames never publish colliding mDNS/DNS-SD records for the
+  same printer, even when both use `--network host`.
+- **USB device ownership**: pass only the specific printer's node under
+  `/dev/bus/usb` to the one appliance that owns that physical device (for
+  example `--device /dev/bus/usb/<bus>/<device>` or a narrowly scoped
+  `--device-cgroup-rule`), and grant the container's numeric user (65532)
+  access via host udev group ownership plus `--group-add keep-groups`.
+  Never mount the same USB device, or the whole `/dev/bus/usb` tree
+  read-write, into more than one printer family's appliance, since either
+  could then claim and reset a device the other is using.
+- `tests/coexistence.sh` (run via `just verify`) starts two instances of
+  this image with distinct ports, hostnames and state volumes and checks
+  that they answer independently, advertise under different hostnames, and
+  keep configured printers and state files private to their own volume.
+  This proves the two synthetic appliances do not collide with each other;
+  it does not exercise real USB hardware, so shared-bus contention with an
+  actual physical HP device remains unverified until hardware is available.
+
 PRs target `testing`; after a verified commit is promoted to `stable`, only
 the matching `v<VERSION>` tag can publish an immutable amd64+arm64 GHCR index
 with a signed SPDX SBOM and provenance. There are no mutable OCI `latest`,

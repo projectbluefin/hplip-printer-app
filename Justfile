@@ -41,6 +41,7 @@ verify:
     just validate
     just build
     tests/oci-appliance.sh
+    tests/coexistence.sh
 
 sbom:
     #!/usr/bin/env bash
