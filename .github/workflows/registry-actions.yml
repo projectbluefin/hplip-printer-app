@@ -48,8 +48,17 @@ jobs:
           source_tag="$(sed -n 's/^    # source-tag: \(debian\/[^[:space:]]*\)$/\1/p' elements/printer-app/hplip.bst)"
           [[ "$source_tag" =~ ^debian/([0-9]+\.[0-9]+\.[0-9]+)\+dfsg0-[0-9]+$ ]]
           [[ "${BASH_REMATCH[1]}" == "$version" ]]
-          read -r fsdk_version fsdk_ref <<< "$(sed -n 's/^    ref: freedesktop-sdk-\(.*\)-0-g\([0-9a-f]\{40\}\)$/\1 \2/p' <(curl --fail --silent --show-error https://raw.githubusercontent.com/projectbluefin/ghostscript-printer-app/f36174f27f5bb08421712bd77680cbddfc71862e/elements/freedesktop-sdk.bst))"
-          [[ -n "$fsdk_version" && -n "$fsdk_ref" ]]
+          junction_ref="$(sed -n 's/^[[:space:]]*ref: \([0-9a-f]\{40\}\)$/\1/p' elements/ghostscript-fsdk.bst)"
+          [[ "$junction_ref" =~ ^[0-9a-f]{40}$ ]]
+          upstream="$(mktemp -d)"
+          trap 'rm -rf "$upstream"' EXIT
+          git -C "$upstream" init -q
+          git -C "$upstream" fetch -q --depth=1 https://github.com/projectbluefin/ghostscript-printer-app.git "$junction_ref"
+          junction="$(git -C "$upstream" show FETCH_HEAD:elements/freedesktop-sdk.bst)"
+          read -r fsdk_version fsdk_ref <<< "$(sed -n 's/^[[:space:]]*ref: freedesktop-sdk-\(.*\)-0-g\([0-9a-f]\{40\}\)$/\1 \2/p' <<< "$junction")"
+          [[ -n "$fsdk_version" && "$fsdk_ref" =~ ^[0-9a-f]{40}$ ]]
+          grep -qF "'io.projectbluefin.fsdk.version': '$fsdk_version'" elements/oci/hplip-printer-app.bst
+          grep -qF "'io.projectbluefin.fsdk.ref': '$fsdk_ref'" elements/oci/hplip-printer-app.bst
           image="ghcr.io/${GITHUB_REPOSITORY,,}"
           image="${image%/*}/hplip-printer-app"
           if probe="$(skopeo inspect --creds "$GITHUB_ACTOR:$GH_TOKEN" "docker://${image}:${version}" 2>&1)"; then

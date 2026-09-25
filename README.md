@@ -114,6 +114,9 @@ with a signed SPDX SBOM and provenance. There are no mutable OCI `latest`,
 tag, application version and local Net-SNMP pin on `testing`; no inherited
 Snap/Rockcraft workflow can update `stable`. Failed image checks block release.
 
+The release gate derives FSDK metadata from the immutable Ghostscript commit
+pinned in `elements/ghostscript-fsdk.bst` and rejects mismatched image labels.
+
 ### Properties
 
 - A Printer Application providing the `hpcups` printer driver and all
