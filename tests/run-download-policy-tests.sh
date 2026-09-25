@@ -35,7 +35,7 @@ skipped=""
 server_pid=""
 server_port=""
 
-# shellcheck disable=SC2329  # invoked by the trap below
+# shellcheck disable=SC2317,SC2329  # invoked by the trap below
 cleanup() {
     if [ -n "$server_pid" ]; then
 	kill "$server_pid" 2>/dev/null
