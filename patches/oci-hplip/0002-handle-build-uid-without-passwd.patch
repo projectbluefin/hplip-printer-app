@@ -1,0 +1,19 @@
+diff --git a/base/g.py b/base/g.py
+--- a/base/g.py
++++ b/base/g.py
+@@ -272,6 +272,11 @@
+ prop.home_dir = sys_conf.get('dirs', 'home', os.path.realpath(os.path.normpath(os.getcwd())))
+-prop.username = pwd.getpwuid(os.getuid())[0]
+-pdb = pwd.getpwnam(prop.username)
+-prop.userhome = pdb[5]
++try:
++    pdb = pwd.getpwuid(os.getuid())
++except KeyError:
++    prop.username = os.environ['USER']
++    prop.userhome = os.environ['HOME']
++else:
++    prop.username = pdb[0]
++    prop.userhome = pdb[5]
+-
++
+ prop.history_size = 50

@@ -13,6 +13,7 @@ sources:
 build-depends:
   - ghostscript-fsdk.bst:freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
   - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/cups-daemon-only.bst
+  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/avahi.bst
 
 environment:
   PYTHON: python3
@@ -25,8 +26,6 @@ variables:
     --prefix=/usr
     --libdir=%{libdir}
     --disable-foomatic-rip-hplip-install
-    --without-docdir
-    --without-htmldir
     --with-hpppddir=/usr/share/ppd/hplip/HP
     --without-drvdir
     --without-icondir
@@ -63,7 +62,7 @@ config:
   build-commands:
     - find . -name '*.ppd' -print0 | xargs -0 -r gzip -f
     - find data/ -regextype posix-extended -regex '.*\.(ldl|pcl|ps|pdf)' -print0 | xargs -0 -r gzip -f
-    - python3 ./dat2drv.py
+    - USER=root HOME=/tmp python3 ./dat2drv.py
     - make -j2
   install-commands:
     - make DESTDIR="%{install-root}" install

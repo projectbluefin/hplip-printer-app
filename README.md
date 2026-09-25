@@ -60,6 +60,12 @@ the image does not start `cupsd`. This appliance is **print-only**. A
 socket-sink print job is not evidence of scanning, firmware upload to real
 hardware or paper output.
 
+The BuildStream sandbox has no passwd record for its build UID, so HPLIP's
+`dat2drv.py` uses the explicitly supplied build `USER` and `HOME` when NSS
+has no entry. Its network-discovery library links against FSDK's full Avahi
+component, while documentation installs into the source's valid default path
+and is excluded from the runtime composition.
+
 On native x86_64 or aarch64, with Podman, FUSE and `just` available:
 
 ```sh

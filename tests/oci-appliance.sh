@@ -77,7 +77,7 @@ podman exec "$name" /usr/bin/bash -c '
 system_uri="ipp://127.0.0.1:${port}/ipp/system"
 printer_uri="ipp://127.0.0.1:${port}/ipp/print/deskjet-test"
 drivers="$(podman exec "$name" hplip-printer-app -u "$system_uri" drivers)"
-model="$(printf '%s\n' "$drivers" | grep -i 'deskjet 990c' | grep -i hpcups | sed -n '1s/[[:space:]].*//p')"
+model="$(printf '%s\n' "$drivers" | grep -i 'deskjet 990c' | sed -n '1s/[[:space:]].*//p')"
 [[ -n "$model" ]]
 podman exec "$name" hplip-printer-app -u "$system_uri" \
   -d deskjet-test -m "$model" -v "cups:socket://127.0.0.1:${sink_port}" add
