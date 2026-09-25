@@ -1,5 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "forkProcessing": "enabled",
   "baseBranchPatterns": ["testing"],
   "enabledManagers": ["custom.regex"],
   "automerge": false,
