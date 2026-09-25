@@ -9,10 +9,10 @@ sources:
     ref: 7d38b8299e26708ee92c9fe1628e5a000bc23e17
 
 build-depends:
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
 
 depends:
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/openssl.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/openssl.bst
 
 config:
   configure-commands:
@@ -21,3 +21,12 @@ config:
     - make -j2
   install-commands:
     - make DESTDIR="%{install-root}" install
+
+public:
+  bst:
+    split-rules:
+      devel:
+        (>):
+          # The default rule takes only pkgconfig/*.pc, leaving the
+          # directory itself in the runtime image.
+          - '%{libdir}/pkgconfig'

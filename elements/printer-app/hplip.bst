@@ -11,9 +11,9 @@ sources:
     path: patches/oci-hplip
 
 build-depends:
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/cups-daemon-only.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/avahi.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/cups-daemon-only.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/avahi-printing.bst
 
 environment:
   PYTHON: python3
@@ -48,12 +48,12 @@ variables:
 
 depends:
   - printer-app/net-snmp.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/avahi-libs.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/avahi-libs.bst
   - printer-app/python3-distro.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/cups.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/libppd.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/libusb.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/python3.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/cups.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/libppd.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/libusb.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/python3.bst
 
 config:
   configure-commands:
@@ -66,6 +66,9 @@ config:
     - make -j2
   install-commands:
     - make DESTDIR="%{install-root}" install
+    # libtool archives are build-time only; the Python extension ones under
+    # site-packages fall outside the devel split rules.
+    - find "%{install-root}" -name '*.la' -delete
     - sed -i 's|^run=.*|run=/var/lib/hplip-printer-app/run|' "%{install-root}/etc/hp/hplip.conf"
     - install -D -m 0644 debian/upstream/signing-key.asc "%{install-root}/usr/share/hplip/signing-key.asc"
     - cp prnt/ps/*.ppd.gz "%{install-root}/usr/share/ppd/hplip/HP/"

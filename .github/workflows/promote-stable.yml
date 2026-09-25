@@ -26,6 +26,8 @@ jobs:
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
+    env:
+      BST_FLAGS: --config /src/ci/buildstream.conf
     permissions:
       contents: read
     steps:

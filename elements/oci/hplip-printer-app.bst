@@ -1,10 +1,10 @@
 kind: script
 
 build-depends:
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:bootstrap/bash.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:bootstrap/coreutils.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/oci-builder.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/sed.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:bootstrap/bash.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:bootstrap/coreutils.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/oci-builder.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/sed.bst
   - filename: printer-app/version.bst
     config:
       location: /metadata
@@ -22,7 +22,7 @@ config:
         'nonroot:x:65532:65532:HPLIP Printer Application:/var/lib/hplip-printer-app:/usr/sbin/nologin' \
         >> /layer/etc/passwd
       printf '%s\n' 'root:x:0:' 'nonroot:x:65532:' >> /layer/etc/group
-      rm -rf /layer/run/dbus /layer/run/avahi-daemon /layer/run/ghostscript-printer-app
+      rm -rf /layer/run/dbus /layer/run/avahi-daemon
       rm -rf /layer/usr/lib/debug /layer/usr/share/cups/ipptool
       rm -f /layer/usr/bin/cupsd /layer/usr/bin/ippeveprinter
       chmod 0777 /layer/run

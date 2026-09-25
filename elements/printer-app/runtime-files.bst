@@ -6,7 +6,7 @@ sources:
     path: files
 
 build-depends:
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:public-stacks/runtime-gnu.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:public-stacks/runtime-gnu.bst
 
 config:
   install-commands:

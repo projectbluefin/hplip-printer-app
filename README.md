@@ -54,17 +54,20 @@ first.
 Upstream `snap/` and `rockcraft.yaml` remain as source references, but this
 fork builds and releases only the BuildStream OCI image.
 It builds the Debian-patched HPLIP print drivers (`hpcups`, `hpps`, `hp`, `HP`,
-`hp-probe` and their PPDs) against the pinned Ghostscript freedesktop-sdk
-junction. The junction supplies the one patched CUPS source and PAPPL stack;
-the image does not start `cupsd`. This appliance is **print-only**. A
-socket-sink print job is not evidence of scanning, firmware upload to real
-hardware or paper output.
+`hp-probe` and their PPDs) on the shared printing base
+(`fsdk-containers.bst:printing/base.bst`) from the pinned fsdk-containers
+junction (`elements/fsdk-containers.bst`). The base is the one patched CUPS,
+cups-filters, Ghostscript, Avahi and PAPPL stack for all printer
+applications, and FSDK is reached only through it; the image does not start
+`cupsd`. The final image composes runtime domains only. This appliance is
+**print-only**. A socket-sink print job is not evidence of scanning, firmware
+upload to real hardware or paper output.
 
 The BuildStream sandbox has no passwd record for its build UID, so HPLIP's
 `dat2drv.py` uses the explicitly supplied build `USER` and `HOME` when NSS
-has no entry. Its network-discovery library links against FSDK's full Avahi
-component, while documentation installs into the source's valid default path
-and is excluded from the runtime composition.
+has no entry. Its network-discovery library links against the base's
+nonroot Avahi (`avahi-printing`), while documentation installs into the
+source's valid default path and is excluded from the runtime composition.
 
 On native x86_64 or aarch64, with Podman, FUSE and `just` available:
 
@@ -77,9 +80,10 @@ just verify
 `just verify` builds the actual OCI image, starts it as numeric user 65532,
 prints through PAPPL, `hpcups` and the CUPS socket backend into a TCP sink,
 then checks the PCL raster output and persisted state. It also checks HTTPS,
-supervised D-Bus/Avahi shutdown and required-child failure. The service uses
-port 18030 by default; assign a different unprivileged `PORT` for each
-simultaneously running printer family.
+supervised D-Bus/Avahi shutdown, required-child failure, and that the image
+carries no devel content (`just check-no-devel`). The service uses port 18030
+by default; assign a different unprivileged `PORT` for each simultaneously
+running printer family.
 
 For a rootless deployment, dedicate a volume to **this** application:
 
@@ -115,9 +119,16 @@ CI (`fsdk-ci.yml`) runs only `just validate` (a BuildStream graph check) on
 pull requests. The merge queue and `workflow_dispatch` run the full native
 x86_64 and aarch64 image build plus `just verify`.
 Full builds restore BuildStream's local CAS, artifacts and source protos from
-the GitHub Actions cache, one entry per arch. `bst-cache.yml` refills it on
-pushes to `testing`, nightly and on dispatch, capped by `ci/buildstream.conf`
-(saved only when an arch fits in 4.5 GB). Reset it with `gh cache delete --all`.
+the GitHub Actions cache, one entry per arch. If the printing base is not
+cached, they first seed it from fsdk-containers' cosign-verified
+`ghcr.io/projectbluefin/printing-base-devel:<arch>-<key>` bundle; any failure
+falls back to a local build. CI passes `ci/buildstream.conf` to every `bst`
+call (`BST_FLAGS`), which fetches sources only from the Bluefin source cache.
+`bst-cache.yml` refills the cache on pushes to `testing`, nightly and on
+dispatch (saved only when an arch fits in 9000 MB uncompressed; a larger
+cache fails the refill). Reset it with
+`gh cache delete --all`. `update-base.yml` proposes fsdk-containers junction
+bumps to `testing` daily.
 
 PRs target `testing`; after a verified commit is promoted to `stable`, only
 the matching `v<VERSION>` tag can publish an immutable amd64+arm64 GHCR index
@@ -126,8 +137,8 @@ with a signed SPDX SBOM and provenance. There are no mutable OCI `latest`,
 tag, application version and local Net-SNMP pin on `testing`; no inherited
 Snap/Rockcraft workflow can update `stable`. Failed image checks block release.
 
-The release gate derives FSDK metadata from the immutable Ghostscript commit
-pinned in `elements/ghostscript-fsdk.bst` and rejects mismatched image labels.
+The release gate derives FSDK metadata from the fsdk-containers commit pinned
+in `elements/fsdk-containers.bst` and rejects mismatched image labels.
 
 ### Properties
 

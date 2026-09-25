@@ -16,7 +16,7 @@ bst *ARGS:
         -v "${HOME}/.cache/buildstream:/root/.cache/buildstream:rw" \
         -w /src \
         "{{ bst2_image }}" \
-        bash -c 'bst "$@"' -- --no-interactive {{ ARGS }}
+        bash -c 'bst "$@"' -- --no-interactive ${BST_FLAGS:-} {{ ARGS }}
 
 validate:
     just bst show --deps all oci/hplip-printer-app.bst
@@ -41,6 +41,21 @@ verify:
     just validate
     just build
     tests/oci-appliance.sh
+    just check-no-devel
+
+# No devel content in the image (fsdk-containers printing-base consumer rule 5)
+check-no-devel:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    IMAGE="{{ image_ref }}"
+    root="$(mktemp -d)"
+    ctr="$(podman create "${IMAGE}" /none)"
+    trap 'podman rm -f "${ctr}" >/dev/null; chmod -R u+w "${root}"; rm -rf "${root}"' EXIT
+    podman export "${ctr}" | tar -C "${root}" -xf -
+    bad="$(cd "${root}" && find . -path ./usr/share/licenses -prune -o \( -path ./usr/include -o -name '*.a' -o -name '*.la' \
+          -o -type d -name pkgconfig -o -type d -name cmake \) -print -quit)"
+    [ -z "${bad}" ] || { echo "devel content in ${IMAGE}: ${bad}" >&2; exit 1; }
+    echo "OK: no devel content in ${IMAGE}"
 
 sbom:
     #!/usr/bin/env bash

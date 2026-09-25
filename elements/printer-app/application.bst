@@ -18,14 +18,14 @@ sources:
     path: VERSION
 
 build-depends:
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst
 
 depends:
   - printer-app/hplip.bst
-  - ghostscript-fsdk.bst:printer-app/pappl-retrofit.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/curl.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/openssl.bst
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/ghostscript.bst
+  - fsdk-containers.bst:printing/pappl-retrofit.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/curl.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/openssl.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/ghostscript.bst
 
 config:
   build-commands:

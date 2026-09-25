@@ -7,10 +7,10 @@ sources:
     ref: 2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed
 
 build-depends:
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:public-stacks/buildsystem-python-setuptools.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:public-stacks/buildsystem-python-setuptools.bst
 
 depends:
-  - ghostscript-fsdk.bst:freedesktop-sdk.bst:components/python3.bst
+  - fsdk-containers.bst:freedesktop-sdk.bst:components/python3.bst
 
 config:
   build-commands:

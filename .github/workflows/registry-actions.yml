@@ -48,12 +48,12 @@ jobs:
           source_tag="$(sed -n 's/^    # source-tag: \(debian\/[^[:space:]]*\)$/\1/p' elements/printer-app/hplip.bst)"
           [[ "$source_tag" =~ ^debian/([0-9]+\.[0-9]+\.[0-9]+)\+dfsg0-[0-9]+$ ]]
           [[ "${BASH_REMATCH[1]}" == "$version" ]]
-          junction_ref="$(sed -n 's/^[[:space:]]*ref: \([0-9a-f]\{40\}\)$/\1/p' elements/ghostscript-fsdk.bst)"
+          junction_ref="$(sed -n 's/^[[:space:]]*ref: \([0-9a-f]\{40\}\)$/\1/p' elements/fsdk-containers.bst)"
           [[ "$junction_ref" =~ ^[0-9a-f]{40}$ ]]
           upstream="$(mktemp -d)"
           trap 'rm -rf "$upstream"' EXIT
           git -C "$upstream" init -q
-          git -C "$upstream" fetch -q --depth=1 https://github.com/projectbluefin/ghostscript-printer-app.git "$junction_ref"
+          git -C "$upstream" fetch -q --depth=1 https://github.com/projectbluefin/fsdk-containers.git "$junction_ref"
           junction="$(git -C "$upstream" show FETCH_HEAD:elements/freedesktop-sdk.bst)"
           read -r fsdk_version fsdk_ref <<< "$(sed -n 's/^[[:space:]]*ref: freedesktop-sdk-\(.*\)-0-g\([0-9a-f]\{40\}\)$/\1 \2/p' <<< "$junction")"
           [[ -n "$fsdk_version" && "$fsdk_ref" =~ ^[0-9a-f]{40}$ ]]
@@ -88,6 +88,8 @@ jobs:
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
+    env:
+      BST_FLAGS: --config /src/ci/buildstream.conf
     permissions:
       contents: read
     steps:
@@ -132,6 +134,8 @@ jobs:
   publish:
     needs: [metadata, build]
     runs-on: ubuntu-24.04
+    env:
+      BST_FLAGS: --config /src/ci/buildstream.conf
     permissions:
       contents: read
       packages: write
