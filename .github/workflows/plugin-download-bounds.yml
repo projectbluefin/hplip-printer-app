@@ -1,0 +1,101 @@
+name: Plugin download bounds
+
+# The bounds on the HTTP transfers which fetch HP's proprietary plugin were
+# added without a way to exercise them; this runs the tests for them, and
+# checks that the application still compiles with them in place.
+
+on:
+  push:
+    branches:
+      - testing
+      - stable
+    paths:
+      - hplip-download-policy.c
+      - hplip-download-policy.h
+      - hplip-printer-app.c
+      - Makefile
+      - tests/**
+      - .github/workflows/plugin-download-bounds.yml
+  pull_request:
+    branches:
+      - testing
+      - stable
+    paths:
+      - hplip-download-policy.c
+      - hplip-download-policy.h
+      - hplip-printer-app.c
+      - Makefile
+      - tests/**
+      - .github/workflows/plugin-download-bounds.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  download-bounds:
+    name: Bounds and stalled endpoint
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install libcurl's development headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+
+      - name: Lint the test script
+        run: shellcheck -s sh tests/run-download-policy-tests.sh
+
+      - name: Check the syntax of the test server
+        run: python3 -m py_compile tests/stall-server.py
+
+      - name: Test the bounds and demonstrate them on a stalled endpoint
+        run: tests/run-download-policy-tests.sh
+
+  app-compiles:
+    name: Application compiles
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install libcurl and OpenSSL development headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libcurl4-openssl-dev libssl-dev
+
+      - name: Fetch the headers of the pinned libraries
+        run: |
+          # The revisions rockcraft.yaml and snap/snapcraft.yaml build
+          # against, so a failure here is a change in this repository rather
+          # than upstream drift.  pappl-retrofit carries no tag in either
+          # recipe, and is taken from its master branch here as well.
+          git clone --quiet --depth 1 --branch v1.4.9 \
+            https://github.com/michaelrsweet/pappl.git .headers/pappl
+          git clone --quiet --depth 1 --branch v2.4.14 \
+            https://github.com/OpenPrinting/cups.git .headers/cups
+          git clone --quiet --depth 1 --branch 2.1.1 \
+            https://github.com/OpenPrinting/libcupsfilters.git \
+            .headers/libcupsfilters
+          git clone --quiet --depth 1 --branch 2.1.1 \
+            https://github.com/OpenPrinting/libppd.git .headers/libppd
+          git clone --quiet --depth 1 \
+            https://github.com/OpenPrinting/pappl-retrofit.git \
+            .headers/pappl-retrofit
+
+      - name: Compile the application
+        # No -Werror: the upstream source does not build warning-free.
+        run: |
+          cc -std=gnu99 -Wall -Wextra -c hplip-printer-app.c \
+            -o /tmp/hplip-printer-app.o \
+            -I. \
+            -I.headers/pappl \
+            -I.headers/pappl-retrofit/pappl-retrofit \
+            -I.headers/cups \
+            -I.headers/libppd \
+            -I.headers/libcupsfilters \
+            -DHPLIP_CONF_DIR='"/etc/hp"' \
+            -DHPLIP_PLUGIN_STATE_DIR='"/var/lib/hp"'

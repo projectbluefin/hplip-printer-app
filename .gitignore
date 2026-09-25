@@ -5,3 +5,6 @@
 .build-out/
 *.oci
 *.spdx.json
+
+# Python bytecode from compiling the test server
+__pycache__/

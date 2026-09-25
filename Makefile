@@ -76,7 +76,7 @@ LIBS		+=	`pkg-config --libs pappl` `cups-config --image --libs` `pkg-config --li
 
 
 # Targets...
-OBJS		=	hplip-printer-app.o hplip-plugin-verify.o
+OBJS		=	hplip-printer-app.o hplip-plugin-verify.o hplip-download-policy.o
 TARGETS		=	hplip-printer-app
 
 

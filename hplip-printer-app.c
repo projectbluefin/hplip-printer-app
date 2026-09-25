@@ -28,6 +28,8 @@
 #include <linux/fs.h>
 #include "hplip-plugin-verify.h"
 
+#include "hplip-download-policy.h"
+
 //
 // Constants...
 //
@@ -414,19 +416,44 @@ hplip_plugin_status(pappl_system_t *system)
 // 'hplip_download_file() - Download a file from a given URL to a local
 //                          temporary file
 //
+// Every transfer is bounded by connect, total, and stall timeouts, so a
+// server which accepts the connection but never answers cannot hold the
+// web admin request which triggered the download open forever.  On
+// failure the caller gets NULL, a sentence describing what went wrong
+// in 'error', and no file left behind.
+//
 
 char*
-hplip_download_file(pappl_system_t *system, const char *url)
+hplip_download_file(pappl_system_t *system, const char *url,
+		    char *error, size_t error_size)
 {
-  int           fd, status;
+  int           fd;
   char          tempfile[1024] = "";
   CURL *curl;
   FILE *fp = NULL;
-  CURLcode ret;
+  CURLcode ret = CURLE_OK;
+  hplip_download_policy_t policy;
+  double        connect_time = 0.0,
+		total_time = 0.0;
 
+
+  if (error && error_size)
+    error[0] = '\0';
+
+  // Work out the bounds for this transfer
+  hplip_download_policy_defaults(&policy);
+  hplip_download_policy_from_env(&policy);
+  if (policy.rejected)
+    papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	     "Ignored %d unusable plugin download bound setting(s), the built-in values are in use. See the %s, %s, %s and %s environment variables.",
+	     policy.rejected,
+	     HPLIP_DOWNLOAD_CONNECT_TIMEOUT_ENV, HPLIP_DOWNLOAD_TOTAL_TIMEOUT_ENV,
+	     HPLIP_DOWNLOAD_STALL_LIMIT_ENV, HPLIP_DOWNLOAD_STALL_TIME_ENV);
 
   papplLog(system, PAPPL_LOGLEVEL_DEBUG,
-	   "Downloading %s", url);
+	   "Downloading %s (connect timeout %lds, total timeout %lds, abort after %lds below %ld bytes/s)",
+	   url, policy.connect_timeout, policy.total_timeout,
+	   policy.stall_time, policy.stall_limit);
 
   // Setup curl
   curl = curl_easy_init();
@@ -438,6 +465,20 @@ hplip_download_file(pappl_system_t *system, const char *url)
     {
       papplLog(system, PAPPL_LOGLEVEL_ERROR,
 	       "Unable to create temporary file");
+      curl_easy_cleanup(curl);
+      return (NULL);
+    }
+
+    if ((fp = fdopen(fd, "wb")) == NULL)
+    {
+      // Without a stream to write to, libcurl would be handed a NULL
+      // FILE and the download would never be attempted.
+      papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	       "Unable to open temporary file %s: %s",
+	       tempfile, strerror(errno));
+      close(fd);
+      unlink(tempfile);
+      curl_easy_cleanup(curl);
       return (NULL);
     }
 
@@ -448,17 +489,21 @@ hplip_download_file(pappl_system_t *system, const char *url)
 #endif
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
     // Download the file
-    fp = fdopen(fd, "wb");
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 10L);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
-    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+    hplip_download_policy_apply(curl, &policy);
     ret = curl_easy_perform(curl);
+
+    // Ask libcurl what actually happened before the handle goes away:
+    // which of the timeouts expired is not in the result code.
+    curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &connect_time);
+    curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &total_time);
+
     curl_easy_cleanup(curl);
     fclose(fp);
-    close(fd);
   }
   else
   {
@@ -468,14 +513,20 @@ hplip_download_file(pappl_system_t *system, const char *url)
   }
 
   // Check for errors
-  if ((int)ret == 0)
+  if (ret == CURLE_OK)
     return(strdup(tempfile));
   else
   {
+    // Describe the failure for the web interface, and drop the partial
+    // file so that nothing which was cut short can be used later.
+    hplip_download_policy_message(ret, &policy, connect_time > 0.0,
+				  total_time, error, error_size);
+
     papplLog(system, PAPPL_LOGLEVEL_DEBUG,
-	     "Download status: %d", ret);
+	     "Download status: %d (%s)", ret, curl_easy_strerror(ret));
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
-	     "Unable to download file %s", url);
+	     "Unable to download file %s: %s", url,
+	     (error && error[0]) ? error : curl_easy_strerror(ret));
     unlink(tempfile);
   }
 
@@ -653,9 +704,13 @@ hplip_remove_uncompress_dir(pappl_system_t *system, const char *name)
 // 'hplip_download_plugin()' - Download the plugin from the HP's official
 //                             locations, validate, and uncompress it
 //
+// On failure the caller gets NULL and, in 'error', a sentence naming
+// the step which failed and why, for the web interface to show.
+//
 
 char *
-hplip_download_plugin(pappl_system_t *system)
+hplip_download_plugin(pappl_system_t *system,
+		      char *error, size_t error_size)
 {
   int i;
   char *plugin_conf = NULL,
@@ -670,6 +725,7 @@ hplip_download_plugin(pappl_system_t *system)
   FILE *fp = NULL;
   size_t plugin_size;
   char buf[1024];
+  char reason[512];
   struct stat st;
   int fd;
   int bytes;
@@ -679,13 +735,20 @@ hplip_download_plugin(pappl_system_t *system)
   const char *state_dir;
 
 
+  if (error && error_size)
+    error[0] = '\0';
+
   // Get plugin index file from HP
   papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	   "Getting plugin index from HP ...");
-  if ((plugin_conf = hplip_download_file(system, PLUGIN_CONF_URL)) == NULL)
+  if ((plugin_conf = hplip_download_file(system, PLUGIN_CONF_URL,
+					 reason, sizeof(reason))) == NULL)
   {
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
 	     "Unable to download plugin index");
+    if (error && error_size)
+      snprintf(error, error_size,
+	       "the plugin index from HP could not be retrieved: %s", reason);
     goto out;
   }
 
@@ -754,7 +817,8 @@ hplip_download_plugin(pappl_system_t *system)
 	   version);
   papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	   "Trying URL: %s", url);
-  if ((plugin_file = hplip_download_file(system, url)) == NULL)
+  if ((plugin_file = hplip_download_file(system, url,
+					 reason, sizeof(reason))) == NULL)
   {
     papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	     "Unable to download plugin file, trying backup server");
@@ -762,10 +826,15 @@ hplip_download_plugin(pappl_system_t *system)
 	     PLUGIN_ALT_LOCATION, version);
     papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	     "Trying URL: %s", buf);
-    if ((plugin_file = hplip_download_file(system, buf)) == NULL)
+    if ((plugin_file = hplip_download_file(system, buf,
+					   reason, sizeof(reason))) == NULL)
     {
       papplLog(system, PAPPL_LOGLEVEL_ERROR,
 	     "Unable to download plugin file.");
+      if (error && error_size)
+	snprintf(error, error_size,
+		 "the plugin file could not be retrieved from HP or from its backup location: %s",
+		 reason);
       goto out;
     }
   }
@@ -779,10 +848,14 @@ hplip_download_plugin(pappl_system_t *system)
     snprintf(buf, sizeof(buf), "%s.asc", url);
   papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	   "Using URL: %s", buf);
-  if ((signature_file = hplip_download_file(system, buf)) == NULL)
+  if ((signature_file = hplip_download_file(system, buf,
+					    reason, sizeof(reason))) == NULL)
   {
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
 	     "Unable to download plugin signature file.");
+    if (error && error_size)
+      snprintf(error, error_size,
+	       "the plugin signature file could not be retrieved: %s", reason);
     goto out;
   }
 
@@ -880,6 +953,14 @@ hplip_download_plugin(pappl_system_t *system)
   ret = uncompress_dir;
 
  out:
+
+  // Anything which failed after the downloads - a rejected signature, a
+  // size or checksum mismatch, an unusable staging directory - still
+  // needs to say something to the user, so never hand back an empty
+  // reason.
+  if (ret == NULL && error && error_size && !error[0])
+    snprintf(error, error_size,
+	     "the plugin could not be verified or prepared, see the log for details");
 
   // Clean up
   if (fp)
@@ -1272,6 +1353,8 @@ hplip_web_plugin(
   hplip_plugin_status_t plugin_status;
   char                *plugin_dir = NULL;
   char                buf[2048];
+  char                errmsg[512];	// Why a download failed
+  char                download_status[1024]; // Status line including that
   char                *licensetext = NULL;
   int                 plugin_locked = 0;
   FILE                *fp;
@@ -1280,6 +1363,9 @@ hplip_web_plugin(
 
   if (!papplClientHTMLAuthorize(client))
     return;
+
+  errmsg[0] = '\0';
+  download_status[0] = '\0';
 
   // Get status of installed plugin
   plugin_status = hplip_plugin_status(system);
@@ -1333,24 +1419,36 @@ hplip_web_plugin(
         {
 	  papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 		   "Downloading the proprietary plugin ...");
-	  if ((plugin_dir = hplip_download_plugin(system)) == NULL)
+	  if ((plugin_dir = hplip_download_plugin(system, errmsg,
+						  sizeof(errmsg))) == NULL)
 	    papplLog(system, PAPPL_LOGLEVEL_ERROR,
-		     "Unable to download plugin ...");
+		     "Unable to download plugin: %s", errmsg);
 	  else
 	    papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 		     "Plugin downloaded to %s", plugin_dir);
 	}
 	else
+	{
 	  papplLog(system, PAPPL_LOGLEVEL_ERROR,
 		   "Printer Application must run as root to download/install plugin.");
+	  snprintf(errmsg, sizeof(errmsg),
+		   "the Printer Application is not running as root, so it cannot install the plugin");
+	}
 	if (plugin_dir)
 	  // Succeeded, set status so that if no installation follows now
 	  // we get onto the license page (if plugin_status ==
 	  // HPLIP_PLUGIN_NOT_INSTALLED)
 	  status = "Plugin downloaded.";
 	else
-	  // Failed, get back to plugin status page
-	  status = "Plugin download failed.";
+	{
+	  // Failed, get back to plugin status page with the reason.  A
+	  // download which ran into a bound is a bounded, explained
+	  // failure rather than a request which hangs.
+	  snprintf(download_status, sizeof(download_status),
+		   "Plugin download failed: %s.",
+		   errmsg[0] ? errmsg : "the reason is in the log file");
+	  status = download_status;
+	}
       }
       if (plugin_locked &&
 	  (plugin_status == HPLIP_PLUGIN_OUTDATED ||
@@ -1772,6 +1870,7 @@ hplip_plugin_support(void *data)
   pappl_system_t   *system = prGetSystem(global_data);
   hplip_plugin_status_t plugin_status;
   char             *plugin_dir;
+  char             errmsg[512] = "";
 
 
   // Get status of installed plugin
@@ -1796,10 +1895,11 @@ hplip_plugin_support(void *data)
       pthread_mutex_lock(&plugin_install_mutex);
       papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	       "Updating an already installed proprietary plugin ...");
-      if ((plugin_dir = hplip_download_plugin(system)) == NULL)
+      if ((plugin_dir = hplip_download_plugin(system, errmsg,
+					      sizeof(errmsg))) == NULL)
       {
 	papplLog(system, PAPPL_LOGLEVEL_ERROR,
-		 "Unable to download plugin ...");
+		 "Unable to download plugin: %s", errmsg);
       }
       else
       {

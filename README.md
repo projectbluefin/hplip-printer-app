@@ -521,7 +521,7 @@ needed. Also install the header files of all needed libraries
 In the directory with hplip-printer-app.c run the command line
 
 ```
-gcc -o hplip-printer-app hplip-printer-app.c $PAPPL_SRC/pappl/libpappl.a $CUPS_FILTERS_SRC/.libs/libppd.a $CUPS_FILTERS_SRC/.libs/libcupsfilters.a $PAPPL_RETROFIT_SRC/.libs/libpappl-retrofit.a -ldl -lpthread  -lppd -lcups -lavahi-common -lavahi-client -lgnutls -ljpeg -lpng16 -ltiff -lz -lm -lusb-1.0 -lpam -lqpdf -lstdc++ -I. -I$PAPPL_SRC/pappl -I$CUPS_FILTERS_SRC/ppd -I$CUPS_FILTERS_SRC/cupsfilters -I$PAPPL_RETROFIT_SRC/pappl/retrofit -L$CUPS_FILTERS_SRC/.libs/ -L$PAPPL_RETROFIT_SRC/.libs/
+gcc -o hplip-printer-app hplip-printer-app.c hplip-download-policy.c $PAPPL_SRC/pappl/libpappl.a $CUPS_FILTERS_SRC/.libs/libppd.a $CUPS_FILTERS_SRC/.libs/libcupsfilters.a $PAPPL_RETROFIT_SRC/.libs/libpappl-retrofit.a -ldl -lpthread  -lppd -lcups -lavahi-common -lavahi-client -lgnutls -ljpeg -lpng16 -ltiff -lz -lm -lusb-1.0 -lpam -lqpdf -lstdc++ -I. -I$PAPPL_SRC/pappl -I$CUPS_FILTERS_SRC/ppd -I$CUPS_FILTERS_SRC/cupsfilters -I$PAPPL_RETROFIT_SRC/pappl/retrofit -L$CUPS_FILTERS_SRC/.libs/ -L$PAPPL_RETROFIT_SRC/.libs/
 ```
 
 There is also a Makefile, but this needs PAPPL, cups-filters 2.x, and
@@ -599,6 +599,44 @@ Apple Raster, PWG Raster):
 ```
 TESTPAGE=/path/to/my/testpage/my_testpage.ps PPD_PATHS=/path/to/my/ppds:/my/second/place ./hplip-printer-app server
 ```
+
+
+## TESTS
+
+The proprietary plugin is downloaded while the web admin request which
+asked for it is waiting for an answer, so every plugin transfer is
+bounded. By default the connection has to come up within 30 seconds, the
+whole transfer has to finish within 900 seconds, and a transfer which
+stays below 1024 bytes per second for 60 seconds is aborted. A download
+which hits one of these bounds removes its temporary file and reports
+what went wrong on the plugin page of the web interface, instead of
+holding the request open and instead of leaving a partial file where the
+installer could pick it up.
+
+The bounds can be changed for an unusually slow mirror with the
+environment variables `HPLIP_PLUGIN_CONNECT_TIMEOUT`,
+`HPLIP_PLUGIN_TIMEOUT`, `HPLIP_PLUGIN_STALL_LIMIT` and
+`HPLIP_PLUGIN_STALL_TIME` (seconds, seconds, bytes per second, seconds).
+A value which is not a positive whole number, or which is out of range,
+is ignored and logged, and the built-in value is used for it instead.
+
+The tests for this need neither PAPPL nor libcurl: the bounds live in
+`hplip-download-policy.c`, which the tests build against a stand-in for
+libcurl's header, and the stalled endpoint the failure case is
+demonstrated on is a local server started by `tests/stall-server.py`.
+
+```
+tests/run-download-policy-tests.sh
+```
+
+The same script compiles the module against libcurl's own header when it
+is installed, which is what catches a bound named wrongly. To point it at
+libcurl headers unpacked somewhere other than the system include
+directory, set `CURL_INCLUDE_DIR`.
+
+`.github/workflows/plugin-download-bounds.yml` runs these tests, and
+compiles the application against the headers of the library revisions the
+Snap and Rock recipes pin.
 
 
 ## LEGAL STUFF
