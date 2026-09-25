@@ -21,9 +21,9 @@ jobs:
       matrix:
         include:
           - arch: x86_64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
           - arch: aarch64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
     env:
@@ -40,9 +40,28 @@ jobs:
       - name: Validate BuildStream graph
         if: env.FULL_BUILD != 'true'
         run: just validate
+      - name: Compute BuildStream cache key
+        id: bst-key
+        if: env.FULL_BUILD == 'true'
+        env:
+          ARCH: ${{ matrix.arch }}
+          INPUTS_HASH: ${{ hashFiles('project.conf', 'elements/**', 'include/**', 'patches/**', 'files/**', 'Makefile', 'hplip-printer-app.c', 'hplip-printer-app.1', 'hplip-printer-app.service', 'testpage.ps', 'HP', 'VERSION') }}
+        run: echo "prefix=bst-v1-${ARCH}-${INPUTS_HASH}-" >> "$GITHUB_OUTPUT"
+      - name: Restore BuildStream cache
+        if: env.FULL_BUILD == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cache/buildstream/cas
+            ~/.cache/buildstream/artifacts
+            ~/.cache/buildstream/source_protos
+          key: ${{ steps.bst-key.outputs.prefix }}${{ github.run_id }}
+          restore-keys: |
+            ${{ steps.bst-key.outputs.prefix }}
+            bst-v1-${{ matrix.arch }}-
       - name: Build image
         if: env.FULL_BUILD == 'true'
-        run: just bst --network-retries 5 build oci/hplip-printer-app.bst
+        run: just bst --config /src/ci/buildstream.conf --network-retries 5 build oci/hplip-printer-app.bst
       - name: Build and print through real OCI image
         if: env.FULL_BUILD == 'true'
         run: just verify

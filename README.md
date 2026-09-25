@@ -114,6 +114,10 @@ remain unverified without supported hardware.
 CI (`fsdk-ci.yml`) runs only `just validate` (a BuildStream graph check) on
 pull requests. The merge queue and `workflow_dispatch` run the full native
 x86_64 and aarch64 image build plus `just verify`.
+Full builds restore BuildStream's local CAS, artifacts and source protos from
+the GitHub Actions cache, one entry per arch. `bst-cache.yml` refills it on
+pushes to `testing`, nightly and on dispatch, capped by `ci/buildstream.conf`
+(saved only when an arch fits in 4.5 GB). Reset it with `gh cache delete --all`.
 
 PRs target `testing`; after a verified commit is promoted to `stable`, only
 the matching `v<VERSION>` tag can publish an immutable amd64+arm64 GHCR index
