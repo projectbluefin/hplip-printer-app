@@ -12,21 +12,13 @@ name: HP Plugin State
 
 on:
   push:
-    branches:
-      - master
-      - main
-      - stable
-      - testing
+    branches: [testing, stable]
     paths:
       - 'scripts/hplip-plugin-state.sh'
       - 'tests/**'
       - '.github/workflows/hp-plugin-state.yml'
   pull_request:
-    branches:
-      - master
-      - main
-      - stable
-      - testing
+    branches: [testing, stable]
     paths:
       - 'scripts/hplip-plugin-state.sh'
       - 'tests/**'
@@ -39,10 +31,12 @@ permissions:
 jobs:
   hp-plugin-state:
     name: HP plugin installation and removal
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Shell syntax check
         run: |

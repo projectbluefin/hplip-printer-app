@@ -23,6 +23,9 @@ sources:
   - kind: local
     path: HP
   - kind: local
+    path: scripts/hplip-plugin-state.sh
+    directory: scripts
+  - kind: local
     path: VERSION
 
 build-depends:

@@ -8,6 +8,7 @@ invalid_name=hplip-printer-app-invalid-port
 port="${PORT:-18030}"
 sink_port="$((port + 1000))"
 state="$(mktemp -d)"
+recovery_state="$(mktemp -d)"
 output="$(mktemp)"
 cookies="$(mktemp)"
 sink_pid=
@@ -18,7 +19,7 @@ cleanup() {
     kill "$sink_pid" >/dev/null 2>&1 || true
     wait "$sink_pid" 2>/dev/null || true
   fi
-  podman unshare rm -rf "$state"
+  podman unshare rm -rf "$state" "$recovery_state"
   rm -f "$output" "$cookies"
 }
 trap cleanup EXIT
@@ -158,4 +159,49 @@ done
 status=0
 podman run --name "$invalid_name" -e PORT=invalid "$image" >/dev/null 2>&1 || status=$?
 [[ "$status" == 64 ]]
-printf 'OK: HPLIP image printed PCL raster over IPP/socket and preserved state\n'
+
+# An upgrade killed after the plugin directories were exchanged but before
+# the new version was registered (issue #16): the next start must complete
+# it with the verified new plugin and leave nothing unexplained behind.
+podman unshare chown 65532:65532 "$recovery_state"
+podman run --rm --entrypoint /usr/bin/bash \
+  -v "$recovery_state:/var/lib/hplip-printer-app:Z" "$image" -c '
+  set -euo pipefail
+  root=/var/lib/hplip-printer-app
+  helper=/usr/share/hplip-printer-app/hplip-plugin-state.sh
+  version= section=
+  while IFS= read -r line; do
+    case "$line" in
+      "["*"]") section="$line" ;;
+      version=*) [[ "$section" == "[hplip]" ]] && version="${line#version=}" ;;
+    esac
+  done < /etc/hp/hplip.conf
+  [[ -n "$version" ]]
+  mkdir "$root/plugin" "$root/plugin_tmp"
+  printf old > "$root/plugin/marker"
+  printf new > "$root/plugin_tmp/marker"
+  printf "[plugin]\ninstalled = 1\neula = 1\nversion = 0.0.1\n" > "$root/hplip.state"
+  "$helper" begin "$root" "$root" install "$version" >/dev/null
+  "$helper" step "$root" "$root" >/dev/null
+  "$helper" step "$root" "$root" >/dev/null
+  [[ "$(< "$root/plugin/marker")" == new && -d "$root/plugin_old" && -f "$root/.plugin-txn" ]]
+  grep -qx "version = 0.0.1" "$root/hplip.state"
+  printf "%s\n" "$version" > "$root/expected-version"
+'
+podman run -d --name "$name" --network host -e PORT="$port" \
+  -v "$recovery_state:/var/lib/hplip-printer-app:Z" "$image" >/dev/null
+wait_for_http "$port"
+podman exec "$name" /usr/bin/bash -c '
+  set -euo pipefail
+  root=/var/lib/hplip-printer-app
+  version="$(< "$root/expected-version")"
+  grep -qx "installed = 1" "$root/hplip.state"
+  grep -qx "version = $version" "$root/hplip.state"
+  [[ "$(< "$root/plugin/marker")" == new ]]
+  test ! -e "$root/.plugin-txn"
+  test ! -e "$root/plugin_old"
+  test ! -e "$root/plugin_tmp"
+'
+podman stop --time 15 "$name" >/dev/null
+podman rm "$name" >/dev/null
+printf 'OK: HPLIP image printed PCL raster over IPP/socket, preserved state and recovered an interrupted plugin upgrade\n'
