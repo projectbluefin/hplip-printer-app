@@ -13,6 +13,11 @@ if (( port < 1024 || port > 65535 )); then
 fi
 
 state=/var/lib/hplip-printer-app
+# $state/run is HPLIP-specific persistent state (see hplip.conf's
+# run=/var/lib/hplip-printer-app/run). Clear any stale PID/socket files left
+# behind by a previous instance before recreating it, so a restarted
+# stateful container never inherits incompatible runtime state.
+rm -rf "$state/run"
 mkdir -p "$state/ppd" "$state/spool" "$state/usb" "$state/cups/ssl" "$state/snmp" "$state/run" /run/dbus /run/avahi-daemon /run/hplip-printer-app
 if [[ -O "$state" ]]; then chmod 0700 "$state"; fi
 if [[ ! -e "$state/cups/snmp.conf" && -f /etc/cups/snmp.conf ]]; then
