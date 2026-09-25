@@ -123,4 +123,4 @@ install:	$(TARGETS)
 hplip-printer-app:	$(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
-$(OBJS):	Makefile hplip-plugin-verify.h
+$(OBJS):	Makefile hplip-plugin-verify.h hplip-download-policy.h

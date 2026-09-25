@@ -521,7 +521,7 @@ needed. Also install the header files of all needed libraries
 In the directory with hplip-printer-app.c run the command line
 
 ```
-gcc -o hplip-printer-app hplip-printer-app.c hplip-download-policy.c $PAPPL_SRC/pappl/libpappl.a $CUPS_FILTERS_SRC/.libs/libppd.a $CUPS_FILTERS_SRC/.libs/libcupsfilters.a $PAPPL_RETROFIT_SRC/.libs/libpappl-retrofit.a -ldl -lpthread  -lppd -lcups -lavahi-common -lavahi-client -lgnutls -ljpeg -lpng16 -ltiff -lz -lm -lusb-1.0 -lpam -lqpdf -lstdc++ -I. -I$PAPPL_SRC/pappl -I$CUPS_FILTERS_SRC/ppd -I$CUPS_FILTERS_SRC/cupsfilters -I$PAPPL_RETROFIT_SRC/pappl/retrofit -L$CUPS_FILTERS_SRC/.libs/ -L$PAPPL_RETROFIT_SRC/.libs/
+gcc -o hplip-printer-app hplip-printer-app.c hplip-plugin-verify.c hplip-download-policy.c $PAPPL_SRC/pappl/libpappl.a $CUPS_FILTERS_SRC/.libs/libppd.a $CUPS_FILTERS_SRC/.libs/libcupsfilters.a $PAPPL_RETROFIT_SRC/.libs/libpappl-retrofit.a -ldl -lpthread  -lppd -lcups -lavahi-common -lavahi-client -lgnutls -ljpeg -lpng16 -ltiff -lz -lm -lusb-1.0 -lpam -lqpdf -lstdc++ -I. -I$PAPPL_SRC/pappl -I$CUPS_FILTERS_SRC/ppd -I$CUPS_FILTERS_SRC/cupsfilters -I$PAPPL_RETROFIT_SRC/pappl/retrofit -L$CUPS_FILTERS_SRC/.libs/ -L$PAPPL_RETROFIT_SRC/.libs/
 ```
 
 There is also a Makefile, but this needs PAPPL, cups-filters 2.x, and
@@ -634,9 +634,9 @@ is installed, which is what catches a bound named wrongly. To point it at
 libcurl headers unpacked somewhere other than the system include
 directory, set `CURL_INCLUDE_DIR`.
 
-`.github/workflows/plugin-download-bounds.yml` runs these tests, and
-compiles the application against the headers of the library revisions the
-Snap and Rock recipes pin.
+`.github/workflows/plugin-download-bounds.yml` runs these tests; the
+application itself is compiled with the bounds in place by the merge-queue
+image build (`just verify`).
 
 
 ## LEGAL STUFF
