@@ -1,6 +1,64 @@
 #!/bin/sh
 
-if ! which hp-probe >/dev/null 2>&1; then
+# "HP" discovery-only CUPS backend of the HPLIP Printer Application.
+#
+# HPLIP's own "hp" backend only discovers USB printers, therefore this
+# backend announces network printers, using HPLIP's "hp-probe" utility.
+#
+# For every discovered printer one standard CUPS device record is printed:
+#
+#   network <device URI> "<make and model>" "<info>" "<device-id>" ""
+#
+# The backend also runs in minimal, non-root container images, so it relies
+# on nothing beyond a POSIX shell and "hp-probe" with the interpreter which
+# runs it (Python 3). In particular:
+#
+#  - "Perl" and "which" are not used ("perl-base" is only needed to build
+#    the Snap and the OCI image, it is not staged into them).
+#  - Strings which come from the discovered devices are never passed to
+#    "eval". These strings travel over the local network (SLP/mDNS response
+#    of the printer), so an arbitrary device on the network could otherwise
+#    run commands inside the container.
+#  - Double quotes and line breaks are removed from the announced strings,
+#    so that a device cannot forge additional fields of its own device
+#    record.
+#  - Printers whose discovery response does not contain a host name (HPLIP
+#    reports an empty name then) are announced as well, with the name which
+#    was resolved from the IP address.
+
+set -u
+
+# Remove the leading and trailing white space of $1, into $trimmed
+trim()
+{
+    trimmed=$1
+    trimmed=${trimmed#"${trimmed%%[![:space:]]*}"}
+    trimmed=${trimmed%"${trimmed##*[![:space:]]}"}
+}
+
+# Replace runs of white space in $1 by single spaces, into $collapsed
+collapse()
+{
+    collapsed=
+    set -f
+    for word in $1; do
+	if [ -n "$collapsed" ]; then
+	    collapsed="$collapsed $word"
+	else
+	    collapsed=$word
+	fi
+    done
+    set +f
+}
+
+# Remove from $1 the characters which would break out of the quoted fields
+# of a CUPS device record, into $sanitized
+sanitize()
+{
+    sanitized=$(printf '%s' "$1" | tr -d '"\\\r\n')
+}
+
+if ! command -v hp-probe >/dev/null 2>&1; then
     echo "ERROR: \"hp-probe\" (HPLIP) not found" 1>&2
     exit 1
 fi
@@ -8,43 +66,156 @@ if ! hp-probe -h >/dev/null 2>&1; then
     echo "ERROR: \"hp-probe\" (HPLIP) not executable (Is Python installed?)" 1>&2
     exit 1
 fi
-if ! which perl >/dev/null 2>&1; then
-    echo "ERROR: \"perl\" not found" 1>&2
-    exit 1
-fi
-if ! perl -h >/dev/null 2>&1; then
-    echo "ERROR: \"perl\" not executable" 1>&2
-    exit 1
-fi
-if ! which avahi-resolve-address >/dev/null 2>&1; then
+if ! command -v avahi-resolve-address >/dev/null 2>&1; then
     echo "WARNING: \"avahi-resolve-address\" not found, URIs will use IP address instead of ZeroConf name" 1>&2
 fi
-if ! which host >/dev/null 2>&1; then
+if ! command -v host >/dev/null 2>&1; then
     echo "WARNING: \"host\" utility not found, URIs will use IP address instead of host name" 1>&2
 fi
 
-for line in \
-    `hp-probe -bnet -o5 | \
-    grep 'hp:/net/' | \
-    perl -p -e 's|^\s*(\S+)\s+(\S+)\s+(\S+)\s*$|URI=\1;MODELRAW=\2;NETID=\3\n|'`; do
-    eval "$line"
-    MODEL=`echo $MODELRAW | perl -p -e 's/_/ /g'`
-    DEVID=`echo $MODEL | perl -p -e 's/^(Hewlett[ -]Packard|\S+)\s+(.*)$/MFG:\1;MDL:\1 \2;/i'`
-    IP=`echo $URI | perl -p -e 's|^.+\?ip=(\d+\.\d+\.\d+\.\d+)\s*$|\1|i'` || IP=
-    if [ -n "$IP" ]; then
-	ZEROCONFNAME=`avahi-resolve-address $IP | perl -p -e 's/^\s*\S+\s+(\S+?)(\.local\.?)?\s*$/\1/'` || ZEROCONFNAME=
-	if [ -n "$ZEROCONFNAME" ]; then
-	    URI=`echo $URI | perl -p -e "s|\?ip=(\d+\.\d+\.\d+\.\d+)|?zc=$ZEROCONFNAME|"`
+seen=
+line=
+hp-probe -bnet -o5 | while IFS= read -r line || [ -n "$line" ]; do
+    # Only device URIs of network printers are interesting
+    case "$line" in
+	*hp:/net/*) ;;
+	*) continue ;;
+    esac
+
+    # The output of "hp-probe -bnet" is a table with the columns
+    # "Device URI", "Model" and "Name", the first two of which never
+    # contain white space (models are stored with "_" instead of " ")
+    trim "$line"
+    line=$trimmed
+    uri=${line%%[[:space:]]*}
+    rest=${line#"$uri"}
+    trim "$rest"
+    modelraw=${trimmed%%[[:space:]]*}
+    rest=${trimmed#"$modelraw"}
+    trim "$rest"
+    collapse "$trimmed"
+    name=$collapsed
+
+    # Model name with the "_" replaced by " ", as in the original backend
+    model=$(printf '%s' "$modelraw" | tr '_' ' ')
+
+    # Extract the IP address from the "?ip=<IP>" query of the URI, but only
+    # if it is the last component of the URI, exactly as the original
+    # backend did. Multi-port devices ("?ip=<IP>&port=<N>") keep their URI.
+    ip=
+    case "$uri" in
+	*\?ip=*)
+	    ip=${uri##*\?ip=}
+	    case "$ip" in
+		*[!0123456789.]*) ip= ;;
+	    esac
+	    ;;
+    esac
+
+    zcname=
+    hostname=
+    if [ -n "$ip" ]; then
+	# Prefer the ZeroConf name of the printer, so that the device URI
+	# stays valid when the printer gets a different IP address
+	if command -v avahi-resolve-address >/dev/null 2>&1; then
+	    zcname=$(avahi-resolve-address "$ip" 2>/dev/null | head -1)
+	    trim "$zcname"
+	    zcname=${trimmed#*[[:space:]]}
+	    trim "$zcname"
+	    zcname=${trimmed%.local.}
+	    zcname=${zcname%.local}
+	    zcname=${zcname%.}
+	fi
+	if [ -n "$zcname" ]; then
+	    uri="${uri%"?ip=$ip"}?zc=$zcname"
 	else
-	    HOSTNAME=`host $IP | head -1 | perl -p -e 's/^.*\s+(\S+?)\.?\s*$/\1/'` || :
-	    if [ -n "$HOSTNAME" ]; then
-		URI=`echo $URI | perl -p -e "s|\?ip=(\d+\.\d+\.\d+\.\d+)|?hostname=$HOSTNAME|"`
+	    # Fall back to the host name, if there is no ZeroConf name
+	    if command -v host >/dev/null 2>&1; then
+		hostname=$(host "$ip" 2>/dev/null | head -1)
+		trim "$hostname"
+		hostname=${trimmed##*[[:space:]]}
+		hostname=${hostname%.}
+	    fi
+	    if [ -n "$hostname" ]; then
+		uri="${uri%"?ip=$ip"}?hostname=$hostname"
 	    fi
 	fi
     fi
-    if [ -n "$URI" -a -n "$MODEL" -a -n "$NETID" -a -n "$DEVID" ]; then
-	echo network $URI \"$MODEL\" "\"$MODEL Network $NETID HPLIP\"" \"$DEVID\" \"\"
+
+    # Name of the network interface of the device, to distinguish several
+    # devices announcing themselves from the same IP address
+    netid=$name
+    if [ -z "$netid" ]; then
+	netid=$zcname
     fi
+    if [ -z "$netid" ]; then
+	netid=$hostname
+    fi
+    if [ -z "$netid" ]; then
+	netid=$ip
+    fi
+
+    if [ -z "$model" ]; then
+	echo "WARNING: \"hp-probe\" reported a printer without model name, device URI \"$uri\" ignored" 1>&2
+	continue
+    fi
+
+    # Build the IEEE-1284 device ID, as the original backend did. For a
+    # model name without manufacturer ("OfficeJet Pro 8600") the first word
+    # is taken as manufacturer, a model name without white space is used
+    # as-is.
+    mfg=
+    rest=
+    case "$model" in
+	"Hewlett-Packard "*)
+	    mfg="Hewlett-Packard"
+	    rest=${model#"Hewlett-Packard "}
+	    ;;
+	"Hewlett Packard "*)
+	    mfg="Hewlett Packard"
+	    rest=${model#"Hewlett Packard "}
+	    ;;
+	*" "*)
+	    mfg=${model%%[[:space:]]*}
+	    rest=${model#"$mfg"}
+	    trim "$rest"
+	    rest=$trimmed
+	    ;;
+    esac
+    if [ -n "$mfg" ]; then
+	devid="MFG:$mfg;MDL:$mfg $rest;"
+    else
+	devid=$model
+    fi
+
+    # A device which answers several discovery requests must not be
+    # announced more than once
+    case "
+$seen
+" in
+	*"
+$uri
+"*) continue ;;
+    esac
+    seen="$seen
+$uri"
+
+    if [ -n "$netid" ]; then
+	info="$model Network $netid HPLIP"
+    else
+	info="$model HPLIP"
+    fi
+
+    sanitize "$uri"
+    uri=$sanitized
+    sanitize "$model"
+    model=$sanitized
+    sanitize "$info"
+    info=$sanitized
+    sanitize "$devid"
+    devid=$sanitized
+
+    printf 'network %s "%s" "%s" "%s" ""\n' "$uri" "$model" "$info" "$devid"
 done
 
 exit 0

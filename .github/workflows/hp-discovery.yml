@@ -1,0 +1,49 @@
+name: HP Network Discovery
+
+# The "HP" backend discovers network printers with HPLIP's "hp-probe" and
+# announces them with standard "hp:/net/..." device URIs. It gets its device
+# data from the responses of the devices on the local network, so it is
+# tested here on every change, with synthetic discovery responses, without
+# needing a printer or a container image.
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - stable
+      - testing
+    paths:
+      - 'HP'
+      - 'tests/**'
+      - '.github/workflows/hp-discovery.yml'
+  pull_request:
+    branches:
+      - master
+      - main
+      - stable
+      - testing
+    paths:
+      - 'HP'
+      - 'tests/**'
+      - '.github/workflows/hp-discovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hp-discovery:
+    name: HP network discovery backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba825da76410c181273ba90b1 # v7.0.1
+
+      - name: Shell syntax check
+        run: |
+          shellcheck -s sh HP tests/hp-discovery.sh
+
+      - name: Run HP network discovery tests
+        run: |
+          sh tests/hp-discovery.sh

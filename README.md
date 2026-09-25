@@ -549,6 +549,13 @@ CUPS backend (discovery mode only). This especially makes only HP and
 Apollo printers being discovered. Printers from other manufacturers
 are not supported.
 
+The `HP` wrapper needs nothing but a POSIX shell and the Python runtime
+of `hp-probe` itself, so it also works as non-root in the OCI image and
+in the Snap, and it announces every discovered printer with its standard
+`hp:/net/...` device URI. Its parsing of the `hp-probe` output and the
+device records it emits are tested by `tests/hp-discovery.sh`, which
+drives it with synthetic discovery responses.
+
 Jobs are filtered through `hpcups` and send to the printer via the
 `hp` backend (both USB and network).
 
