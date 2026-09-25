@@ -139,6 +139,10 @@ Snap/Rockcraft workflow can update `stable`. Failed image checks block release.
 
 The release gate derives FSDK metadata from the fsdk-containers commit pinned
 in `elements/fsdk-containers.bst` and rejects mismatched image labels.
+The release workflow pushes, signs (index and both architecture manifests),
+attests and verifies everything by digest. It creates the `<VERSION>`,
+`<VERSION>-x86_64` and `<VERSION>-aarch64` tags only after every check passes,
+so a failed release leaves no tagged, unsigned image.
 
 ### Properties
 
