@@ -1,46 +1,9 @@
 name: FSDK OCI CI
 
 on:
-  push:
-    branches: [testing, stable]
-    paths:
-      - '.github/workflows/fsdk-ci.yml'
-      - '.github/workflows/registry-actions.yml'
-      - '.github/workflows/promote-stable.yml'
-      - 'Justfile'
-      - 'VERSION'
-      - 'Makefile'
-      - 'HP'
-      - 'hplip-printer-app.c'
-      - 'hplip-printer-app.1'
-      - 'hplip-printer-app.service'
-      - 'testpage.ps'
-      - 'project.conf'
-      - 'include/**'
-      - 'elements/**'
-      - 'files/**'
-      - 'patches/oci-hplip/**'
-      - 'tests/**'
   pull_request:
     branches: [testing, stable]
-    paths:
-      - '.github/workflows/fsdk-ci.yml'
-      - '.github/workflows/registry-actions.yml'
-      - '.github/workflows/promote-stable.yml'
-      - 'Justfile'
-      - 'VERSION'
-      - 'Makefile'
-      - 'HP'
-      - 'hplip-printer-app.c'
-      - 'hplip-printer-app.1'
-      - 'hplip-printer-app.service'
-      - 'testpage.ps'
-      - 'project.conf'
-      - 'include/**'
-      - 'elements/**'
-      - 'files/**'
-      - 'patches/oci-hplip/**'
-      - 'tests/**'
+  merge_group:
   workflow_dispatch:
 
 concurrency:
@@ -63,6 +26,8 @@ jobs:
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
+    env:
+      FULL_BUILD: ${{ github.event_name != 'pull_request' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -72,7 +37,12 @@ jobs:
           tool: just
       - name: Install host requirements
         run: sudo apt-get update && sudo apt-get install --yes fuse3 podman
-      - name: Fetch immutable sources
-        run: just fetch
+      - name: Validate BuildStream graph
+        if: env.FULL_BUILD != 'true'
+        run: just validate
+      - name: Build image
+        if: env.FULL_BUILD == 'true'
+        run: just bst --network-retries 5 build oci/hplip-printer-app.bst
       - name: Build and print through real OCI image
+        if: env.FULL_BUILD == 'true'
         run: just verify

@@ -111,6 +111,10 @@ appliance a different port and hostname so DNS-SD advertisements do not
 collide. Physical device discovery, plugin firmware load and paper output
 remain unverified without supported hardware.
 
+CI (`fsdk-ci.yml`) runs only `just validate` (a BuildStream graph check) on
+pull requests. The merge queue and `workflow_dispatch` run the full native
+x86_64 and aarch64 image build plus `just verify`.
+
 PRs target `testing`; after a verified commit is promoted to `stable`, only
 the matching `v<VERSION>` tag can publish an immutable amd64+arm64 GHCR index
 with a signed SPDX SBOM and provenance. There are no mutable OCI `latest`,

@@ -100,7 +100,7 @@ jobs:
       - name: Install image build dependencies
         run: sudo apt-get update && sudo apt-get install --yes fuse3 podman
       - name: Fetch, build and print with native OCI image
-        run: just fetch && just verify
+        run: just bst --network-retries 5 build oci/hplip-printer-app.bst && just verify
       - name: Stamp verified image with release provenance
         env:
           VERSION: ${{ needs.metadata.outputs.version }}
