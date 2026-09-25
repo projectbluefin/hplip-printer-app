@@ -228,6 +228,19 @@ in `elements/fsdk-containers.bst` and rejects mismatched image labels.
   Printer Application (must run as root, otherwise only status check
   of the plugin).
 
+  Installing and removing the plugin exchanges the plugin directory and
+  registers the installed version in the state file. Both are done as a
+  durable transaction, so that the Printer Application getting restarted
+  or killed in the middle of it, especially when it is a container which
+  is replaced during an update, does not lose the plugin which is
+  currently installed, does not leave a plugin directory and a
+  registered version which do not belong together, and does not leave a
+  leftover copy of the downloaded plugin behind. An installation which
+  was interrupted after the downloaded plugin was already verified and
+  put in place is completed on the next start, so the plugin does not
+  need to be downloaded again. The web interface always reports the
+  version of the plugin which is actually installed.
+
 ### To Do
 
 - Support for scanning on HP's multi-function printers. this requires

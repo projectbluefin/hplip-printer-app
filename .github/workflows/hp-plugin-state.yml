@@ -1,0 +1,53 @@
+name: HP Plugin State
+
+# The installation and the removal of HP's proprietary plugin exchange
+# the plugin directory, register the installed version in the state file
+# and clean up the downloaded files. A restart in the middle of that
+# sequence used to be able to lose a working plugin, to leave a plugin
+# directory and a registered version which do not belong together, or to
+# leave an orphan plugin_tmp/ directory behind. The sequence is a durable
+# transaction in scripts/hplip-plugin-state.sh, which is tested here on
+# every change by interrupting it at every phase, without needing a
+# printer, a plugin download, or a container image.
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - stable
+      - testing
+    paths:
+      - 'scripts/hplip-plugin-state.sh'
+      - 'tests/**'
+      - '.github/workflows/hp-plugin-state.yml'
+  pull_request:
+    branches:
+      - master
+      - main
+      - stable
+      - testing
+    paths:
+      - 'scripts/hplip-plugin-state.sh'
+      - 'tests/**'
+      - '.github/workflows/hp-plugin-state.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hp-plugin-state:
+    name: HP plugin installation and removal
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba825da76410c181273ba90b1 # v7.0.1
+
+      - name: Shell syntax check
+        run: |
+          shellcheck -s sh scripts/hplip-plugin-state.sh tests/hp-plugin-state.sh
+
+      - name: Run HP plugin state tests
+        run: |
+          sh tests/hp-plugin-state.sh

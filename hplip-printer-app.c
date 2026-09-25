@@ -25,7 +25,6 @@
 #include <dirent.h>
 #include <pthread.h>
 #include <fcntl.h>
-#include <linux/fs.h>
 #include "hplip-plugin-verify.h"
 
 #include "hplip-download-policy.h"
@@ -84,6 +83,15 @@
 
 #define PLUGIN_CONF_URL "https://hplip.sf.net/plugin.conf"
 #define PLUGIN_ALT_LOCATION "https://developers.hp.com/sites/default/files"
+
+// Helper which installs, removes, and recovers the proprietary plugin with
+// a durable transaction, so that a restart in the middle of an upgrade
+// does not lose a working installation. See
+// "scripts/hplip-plugin-state.sh" for what it does and why.
+
+#ifndef HPLIP_PLUGIN_STATE_SCRIPT
+#  define HPLIP_PLUGIN_STATE_SCRIPT "/usr/share/hplip-printer-app/hplip-plugin-state.sh"
+#endif
 
 //
 // Global state...
@@ -170,167 +178,6 @@ get_config_value(FILE *fp,
   }
 
   return (value);
-}
-
-
-//
-// 'set_config_value()' - Set a new value for a given variable/key in
-//                        a given section of a config file. Create the
-//                        section/key if not yet present.
-//
-
-int
-set_config_value(char **filebuf,
-		 const char *section,
-		 const char *key,
-		 const char *value)
-{
-  char line[1024];
-  int section_found = 0,
-      line_changed = 0,
-      file_changed = 0,
-      done = 0;
-  char *filebufptr, *buf, *bufptr, *lineptr, *lineendptr;
-  size_t size_needed,
-         bytes_written;
-
-  if (!filebuf || !key || !key[0])
-    return (0);
-
-  size_needed = (*filebuf ? strlen(*filebuf) : 0) +
-                (section ? strlen(section) : 0) +
-                strlen(key) +
-                (value ? strlen(value) : 0) + 8;
-
-  // Create a buffer for the whole file plus the new entry
-  buf = (char *)calloc(size_needed, sizeof(char));
-  bufptr = buf;
-
-  // Read the lines of the file to find the point where to apply the change
-  // and put the lines including the change into the buffer
-  if (*filebuf)
-  {
-    filebufptr = *filebuf;
-    while (*filebufptr)
-    {
-      // Read one line from input buffer
-      for (line[0] = '\0', lineptr = line;
-	   *filebufptr && *filebufptr != '\n';
-	   filebufptr++, lineptr ++)
-	*lineptr = *filebufptr;
-      *lineptr = '\n';
-      lineptr ++;
-      *lineptr = '\0';
-      if (*filebufptr) filebufptr ++;
-      line_changed = 0;
-
-      if (strlen(line) > 0 && !done)
-      {
-	// We have not yet set the requested value, still searching the
-	// right place in the file ...
-	if (line[0] == '[')
-        {
-	  // New section
-	  if (section && !strncasecmp(line + 1, section, strlen(section)) &&
-	      line[strlen(section) + 1] == ']')
-	    // Start of requested section
-	    section_found = 1;
-	  else if (section_found && !done && value)
-	  {
-	    // Requested section has ended and new setting not yet written,
-	    // Create new line at end of section
-	    bytes_written = sprintf(bufptr, "%s = %s\n", key, value);
-	    bufptr += bytes_written;
-	    file_changed = 1;
-	    done = 1;
-	  }
-	}
-	else if ((!section || section_found) &&
-	       !strncasecmp(line, key, strlen(key)))
-        {
-	  // Line begins with the name of the key we want to change, continue
-	  // parsing
-	  lineptr = line + strlen(key);
-	  while (*lineptr && isspace(*lineptr)) lineptr ++;
-	  if (*lineptr == '=' || *lineptr == '\n' || *lineptr == '\r' ||
-	      *lineptr == '\0')
-	  {
-	    // The line actually sets our key, right after the key name is
-	    // an '=' ot the line end
-	    if (value) // value == NULL removes the key in the section
-	    {
-	      // We have a valiue, so we change the key's value to hours
-	      if (*lineptr == '=')
-	      {
-		// Find start of value in line
-		lineptr ++;
-		while (*lineptr && isspace(*lineptr)) lineptr ++;
-	      }
-	      // Find end of value in line
-	      lineendptr = lineptr;
-	      while (*lineendptr && *lineendptr != '\n' && *lineendptr != '\r')
-		lineendptr ++;
-	      if (strlen(value) != lineendptr - lineptr ||
-		  strncmp(value, lineptr, lineendptr - lineptr))
-	      {
-		// Value differs from the current one, only then write the
-		// line with the value replaced by hours
-		sprintf(bufptr, "%s", line);
-		bufptr += (lineptr - line);
-		bytes_written = sprintf(bufptr, "%s%s", value, lineendptr);
-		bufptr += bytes_written;
-		line_changed = 1;
-		file_changed = 1;
-	      }
-	    }
-	    else
-	    {
-	      // Value is NULL, meaning that we want to remove the key, so
-	      // mark the line as changed without writing it
-	      line_changed = 1;
-	      file_changed = 1;
-	    }
-	    done = 1;
-	  }
-	}
-      }
-      if (!line_changed)
-      {
-	// No change needed on original line, write it as it is
-	bytes_written = sprintf(bufptr, "%s", line);
-	bufptr += bytes_written;
-      }
-    }
-  }
-
-  if (!done && value)
-  {
-    // Requested section or requested key in section not found, create
-    // the section and the line in it
-    if (section && !section_found)
-    {
-      // Write section line
-      bytes_written = sprintf(bufptr, "[%s]\n", section);
-      bufptr += bytes_written;
-    }
-    // Write key=value line
-    bytes_written = sprintf(bufptr, "%s = %s\n", key, value);
-    bufptr += bytes_written;
-    file_changed = 1;
-  }
-  *bufptr = '\0';
-
-  if (file_changed)
-  {
-    // File has changed, replace the input buffer by the output buffer
-    if (*filebuf)
-      free(*filebuf);
-    *filebuf = buf;
-  }
-  else
-    free(buf);
-
-  return (file_changed);
 }
 
 
@@ -564,6 +411,121 @@ hplip_run_command_line(pappl_system_t *system, const char *command)
   }
 
   return (pclose(fp));
+}
+
+
+//
+// 'hplip_is_safe_argument_char()' - Check whether a character can be part
+//                                   of an argument for the plugin state
+//                                   helper.
+//
+
+int
+hplip_is_safe_argument_char(int c)
+{
+  // Everything which can never be a shell metacharacter, a quote, or a
+  // line break. All values passed to the helper are the HPLIP plugin
+  // directory, the directory of its state file, and a HPLIP version
+  // number.
+  return ((c >= '0' && c <= '9') ||
+	  (c >= 'A' && c <= 'Z') ||
+	  (c >= 'a' && c <= 'z') ||
+	  c == '/' || c == '.' || c == '_' || c == '-' || c == '+');
+}
+
+
+//
+// 'hplip_quote_argument()' - Put an argument into single quotes, so that
+//                            it cannot become part of the command itself.
+//                            Returns 0 if the argument cannot be passed.
+//
+
+int
+hplip_quote_argument(char *buf, size_t bufsize, const char *arg,
+		     pappl_system_t *system)
+{
+  const char *a;
+
+
+  if (!arg || !arg[0])
+  {
+    papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	     "Empty argument for the HPLIP plugin state helper.");
+    return (0);
+  }
+
+  for (a = arg; *a; a ++)
+  {
+    if (!hplip_is_safe_argument_char(*a & 255))
+    {
+      papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	       "Refusing to pass \"%s\" to the HPLIP plugin state helper.",
+	       arg);
+      return (0);
+    }
+  }
+
+  if (strlen(arg) + 3 > bufsize)
+  {
+    papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	     "Argument \"%s\" is too long for the HPLIP plugin state helper.",
+	     arg);
+    return (0);
+  }
+
+  snprintf(buf, bufsize, "'%s'", arg);
+
+  return (1);
+}
+
+
+//
+// 'hplip_run_plugin_state()' - Install, remove, or recover the HPLIP
+//                              plugin with a durable transaction, by
+//                              calling "scripts/hplip-plugin-state.sh".
+//                              "command" is one of the literals "install",
+//                              "remove", and "recover", it never comes
+//                              from a configuration file or from the
+//                              network.
+//
+
+int
+hplip_run_plugin_state(pappl_system_t *system, const char *command,
+		       const char *plugin_dir, const char *version)
+{
+  char buf[4096], quoted_dir[1024], quoted_state[1024], quoted_version[256];
+  int ret;
+
+
+  if (!hplip_quote_argument(quoted_dir, sizeof(quoted_dir), plugin_dir,
+			    system) ||
+      !hplip_quote_argument(quoted_state, sizeof(quoted_state),
+			    HPLIP_PLUGIN_STATE_DIR, system))
+    return (0);
+
+  if (version)
+  {
+    if (!hplip_quote_argument(quoted_version, sizeof(quoted_version),
+			      version, system))
+      return (0);
+
+    snprintf(buf, sizeof(buf), "%s %s %s %s %s",
+	     HPLIP_PLUGIN_STATE_SCRIPT, command, quoted_dir, quoted_state,
+	     quoted_version);
+  }
+  else
+    snprintf(buf, sizeof(buf), "%s %s %s %s",
+	     HPLIP_PLUGIN_STATE_SCRIPT, command, quoted_dir, quoted_state);
+
+  if ((ret = hplip_run_command_line(system, buf)) != 0)
+  {
+    papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	     "The HPLIP plugin state helper failed (status %d) for the command \"%s\".",
+	     ret, command);
+    return (0);
+  }
+
+  return (1);
 }
 
 
@@ -998,113 +960,6 @@ hplip_download_plugin(pappl_system_t *system,
 }
 
 
-#if defined(SNAP) || HPLIP_OCI
-//
-// 'hplip_register_plugin()' - Record plugin install/removal in persistent
-//                              state for Snap and the rootless OCI appliance.
-//
-
-int
-hplip_register_plugin(pappl_system_t *system, const char *installed,
-		      const char *eula, const char *version)
-{
-  int ret = 0;
-  char buf[1024], tempfile[1024] = "";
-  char *filebuf = NULL;
-  int size_needed;
-  FILE *fp;
-
-
-  // Register installation or removal of plugin in hplip.state
-  // Open current file, if present
-  snprintf(buf, sizeof(buf), "%s/%s", HPLIP_PLUGIN_STATE_DIR, "hplip.state");
-  papplLog(system, PAPPL_LOGLEVEL_DEBUG,
-	   "Registering plugin installation status in %s", buf);
-  if ((fp = fopen(buf, "r")) == NULL && errno != ENOENT)
-  {
-    papplLog(system, PAPPL_LOGLEVEL_ERROR,
-	     "Unable to open HPLIP plugin status file %s: %s",
-	     buf, strerror(errno));
-    goto out;
-  }
-
-  if (fp)
-  {
-    // Load complete file into a buffer (if we have a state file)
-    fseek(fp, 0L, SEEK_END);
-    size_needed = ftell(fp);
-    filebuf = (char *)calloc(size_needed + 1, sizeof(char));
-    rewind(fp);
-    if (fread(filebuf, 1, size_needed, fp) != size_needed)
-    {
-      papplLog(system, PAPPL_LOGLEVEL_ERROR,
-	       "Unable to read HPLIP plugin status file %s: %s",
-	       buf, strerror(errno));
-      fclose(fp);
-      goto out;
-    }
-    fclose(fp);
-    filebuf[size_needed] = '\0';
-  }
-
-  // Modify the values in the buffer
-  if (set_config_value(&filebuf, "plugin", "installed", installed) +
-      set_config_value(&filebuf, "plugin", "eula", eula) +
-      set_config_value(&filebuf, "plugin", "version", version) > 0)
-  {
-    // Keep the previous status intact until the replacement is complete.
-    int fd;
-    size_t length = strlen(filebuf);
-
-    snprintf(tempfile, sizeof(tempfile), "%s/.hplip.state.XXXXXX",
-             HPLIP_PLUGIN_STATE_DIR);
-    if ((fd = mkstemp(tempfile)) < 0)
-    {
-      papplLog(system, PAPPL_LOGLEVEL_ERROR,
-               "Unable to create HPLIP plugin status file: %s", strerror(errno));
-      tempfile[0] = '\0';
-      goto out;
-    }
-    if ((fp = fdopen(fd, "w")) == NULL)
-    {
-      close(fd);
-      papplLog(system, PAPPL_LOGLEVEL_ERROR,
-               "Unable to open temporary HPLIP plugin status file: %s", strerror(errno));
-      goto out;
-    }
-    if (fwrite(filebuf, 1, length, fp) != length || fflush(fp) != 0 ||
-        fsync(fd) != 0)
-    {
-      papplLog(system, PAPPL_LOGLEVEL_ERROR,
-               "Unable to write HPLIP plugin status file: %s", strerror(errno));
-      fclose(fp);
-      goto out;
-    }
-    if (fclose(fp) != 0 || rename(tempfile, buf) != 0)
-    {
-      papplLog(system, PAPPL_LOGLEVEL_ERROR,
-               "Unable to install HPLIP plugin status file %s: %s",
-               buf, strerror(errno));
-      goto out;
-    }
-    tempfile[0] = '\0';
-  }
-
-  // Done
-  papplLog(system, PAPPL_LOGLEVEL_DEBUG,
-	   "Registered plugin installation status successfully.");
-  ret = 1;
-
- out:
-  if (tempfile[0])
-    unlink(tempfile);
-  free(filebuf);
-
-  return (ret);
-}
-#endif // SNAP
-
-
 //
 // 'hplip_install_plugin() - Install the downloaded plugin, after the
 //                           license got accepted in the web
@@ -1123,7 +978,7 @@ hplip_install_plugin(pappl_system_t *system, const char *plugin_dir)
 
 #if defined(SNAP) || HPLIP_OCI
 
-  int len, had_plugin = 0, discard_tmp = 1;
+  int len;
   char buf1[1024], buf2[1024];
   DIR *d;
   struct dirent *entry;
@@ -1197,57 +1052,28 @@ hplip_install_plugin(pappl_system_t *system, const char *plugin_dir)
     goto out;
   }
 
-  snprintf(buf1, sizeof(buf1), "%s/plugin_tmp", plugin_dir);
   snprintf(buf2, sizeof(buf2), "%s/plugin", plugin_dir);
-  if (lstat(buf2, &st) == 0)
-  {
-    if (!S_ISDIR(st.st_mode))
-    {
-      papplLog(system, PAPPL_LOGLEVEL_ERROR,
-               "Existing plugin is not a directory: %s", buf2);
-      goto out;
-    }
-    // The previous plugin remains in plugin_tmp until status registration
-    // succeeds; an exchange leaves no gap in which no plugin is installed.
-    had_plugin = 1;
-    if (renameat2(AT_FDCWD, buf1, AT_FDCWD, buf2, RENAME_EXCHANGE) != 0)
-    {
-      papplLog(system, PAPPL_LOGLEVEL_ERROR,
-               "Unable to exchange plugin directories %s and %s: %s",
-               buf1, buf2, strerror(errno));
-      goto out;
-    }
-  }
-  else if (errno == ENOENT)
-  {
-    if (rename(buf1, buf2) != 0)
-    {
-      papplLog(system, PAPPL_LOGLEVEL_ERROR,
-               "Unable to install plugin directory %s: %s", buf2, strerror(errno));
-      goto out;
-    }
-  }
-  else
+  if (lstat(buf2, &st) == 0 && !S_ISDIR(st.st_mode))
   {
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
-             "Unable to inspect installed plugin %s: %s", buf2, strerror(errno));
+             "Existing plugin is not a directory: %s", buf2);
     goto out;
   }
 
-  if (!hplip_register_plugin(system, "1", "1", version))
+  // Make the downloaded and verified plugin the installed one and register
+  // it. This is a durable transaction which keeps the previously installed
+  // plugin until the new one is in place and registered, so that a restart
+  // in the middle of it neither loses a working installation nor leaves a
+  // plugin directory and a registered version which do not belong
+  // together. An interrupted transaction gets completed by
+  // hplip_recover_plugin() during the next start.
+  papplLog(system, PAPPL_LOGLEVEL_DEBUG,
+	   "Installing the plugin (version %s) in %s", version, plugin_dir);
+
+  if (!hplip_run_plugin_state(system, "install", plugin_dir, version))
   {
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
-             "Unable to register HPLIP plugin installation status.");
-    if ((had_plugin &&
-         renameat2(AT_FDCWD, buf1, AT_FDCWD, buf2, RENAME_EXCHANGE) != 0) ||
-        (!had_plugin && rename(buf2, buf1) != 0))
-    {
-      // Keep both directories for recovery if the rollback itself fails.
-      discard_tmp = 0;
-      papplLog(system, PAPPL_LOGLEVEL_ERROR,
-               "Unable to restore the previous plugin from %s: %s",
-               buf1, strerror(errno));
-    }
+	     "Unable to install the HPLIP plugin into %s.", plugin_dir);
     goto out;
   }
 
@@ -1279,9 +1105,9 @@ hplip_install_plugin(pappl_system_t *system, const char *plugin_dir)
  out:
 #if defined(SNAP) || HPLIP_OCI
   free(version);
-  if (discard_tmp)
 #endif
-    hplip_remove_uncompress_dir(system, "plugin_tmp");
+  // Remove the uncompressed plugin file
+  hplip_remove_uncompress_dir(system, "plugin_tmp");
 
   return (ret);
 }
@@ -1291,34 +1117,26 @@ hplip_install_plugin(pappl_system_t *system, const char *plugin_dir)
 //
 // 'hplip_remove_plugin()' - Uninstall a Snap/OCI plugin from its persistent
 //                           state and unregister its installation status.
+//                           Uses the same durable transaction as
+//                           hplip_install_plugin(), so that a restart in the
+//                           middle of a removal cannot leave an unregistered
+//                           plugin directory behind.
 //
 
 int
 hplip_remove_plugin(pappl_system_t *system, const char *plugin_dir)
 {
   int ret = 0;
-  char buf[1024];
-  char *filebuf = NULL;
-  int size_needed;
-  FILE *fp;
 
 
-  // Remove the plugin directory
   papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	   "Removing plugin directory %s/plugin",
 	   plugin_dir);
-  if (hplip_remove_uncompress_dir(system, "plugin") == 0)
-  {
-    papplLog(system, PAPPL_LOGLEVEL_ERROR,
-	     "Unable to remove plugin directory %s/plugin", plugin_dir);
-    goto out;
-  }
 
-  // Register removal of plugin in hplip.state
-  if (!hplip_register_plugin(system, "0", NULL, NULL))
+  if (!hplip_run_plugin_state(system, "remove", plugin_dir, NULL))
   {
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
-	     "Unable to register HPLIP plugin installation status.");
+	     "Unable to remove the HPLIP plugin from %s.", plugin_dir);
     goto out;
   }
 
@@ -1331,7 +1149,39 @@ hplip_remove_plugin(pappl_system_t *system, const char *plugin_dir)
 
   return (ret);
 }
-#endif // SNAP
+
+
+//
+// 'hplip_recover_plugin()' - Complete or undo a plugin installation or
+//                            removal which an abrupt restart interrupted
+//                            (Snap and OCI).
+//                            Needs to run before the plugin status gets
+//                            read for the first time, so that the web
+//                            interface and the automatic update report
+//                            the version of the plugin which is really
+//                            installed.
+//
+
+void
+hplip_recover_plugin(pappl_system_t *system)
+{
+  char *plugin_dir;
+
+
+  if ((plugin_dir = hplip_get_uncompress_dir(system, 0)) == NULL)
+  {
+    papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	     "Unable to determine the directory of the plugin for its recovery.");
+    return;
+  }
+
+  if (!hplip_run_plugin_state(system, "recover", plugin_dir, NULL))
+    papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	     "Unable to recover an interrupted installation or removal of the HPLIP plugin. Please install the plugin again in the web interface.");
+
+  free(plugin_dir);
+}
+#endif // SNAP || HPLIP_OCI
 
 
 //
@@ -1872,6 +1722,14 @@ hplip_plugin_support(void *data)
   char             *plugin_dir;
   char             errmsg[512] = "";
 
+
+#if defined(SNAP) || HPLIP_OCI
+  // Finish or undo an installation or removal which an abrupt restart
+  // interrupted during the last run, before the plugin status gets read,
+  // so that everything below, including the automatic update of an
+  // outdated plugin, works on the plugin which is really installed
+  hplip_recover_plugin(system);
+#endif // SNAP || HPLIP_OCI
 
   // Get status of installed plugin
   plugin_status = hplip_plugin_status(system);
