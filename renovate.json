@@ -7,12 +7,12 @@
     {
       "customType": "regex",
       "managerFilePatterns": ["/^elements\\/printer-app\\/hplip\\.bst$/"],
-      "matchStrings": ["(?<currentValue>debian/\\d+\\.\\d+\\.\\d+\\+dfsg0-\\d+)\\n    ref: (?<currentDigest>[a-f0-9]{40})"],
+      "matchStrings": ["(?<currentValue>debian/\\d+\\.\\d+\\.\\d+\\+dfsg0-\\d+)\\n    ref: debian/[^\\s]+-0-g(?<currentDigest>[a-f0-9]{40})"],
       "depNameTemplate": "printing-team/hplip.v2",
       "datasourceTemplate": "gitlab-tags",
       "registryUrlTemplate": "https://salsa.debian.org",
       "versioningTemplate": "regex:^debian/(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+dfsg0-(?<build>\\d+)$",
-      "autoReplaceStringTemplate": "{{{newValue}}}\n    ref: {{{newDigest}}}"
+      "autoReplaceStringTemplate": "{{{newValue}}}\n    ref: {{{newValue}}}-0-g{{{newDigest}}}"
     },
     {
       "customType": "regex",
