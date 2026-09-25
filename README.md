@@ -98,6 +98,10 @@ The rootless application downloads it only after web consent, checks HP's
 published size, checksum and GPG signature using the public key from the
 Debian source, and installs it into the volume. Neither the plugin nor its
 firmware is part of the image. Keep the volume private to its numeric owner.
+
+An empty volume starts with the optional plugin not installed; an unreadable
+status file still produces an error log.
+
 Network/USB discovery requires permissions and a reachable network; if an HP
 USB printer is assigned, pass **only** its `/dev/bus/usb` device with Podman's
 `--device` and grant the mapped user device access (for example via host udev

@@ -364,8 +364,10 @@ hplip_plugin_status(pappl_system_t *system)
   snprintf(buf, sizeof(buf), "%s/%s", HPLIP_PLUGIN_STATE_DIR, "hplip.state");
   if ((fp = fopen(buf, "r")) == NULL)
   {
-    papplLog(system, PAPPL_LOGLEVEL_ERROR,
-	     "Unable to open HPLIP plugin status file %s", buf);
+    if (errno != ENOENT)
+      papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	       "Unable to open HPLIP plugin status file %s: %s",
+	       buf, strerror(errno));
     return (status);
   }
 
