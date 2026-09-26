@@ -111,9 +111,10 @@ USB printer is assigned, pass **only** its `/dev/bus/usb` device with Podman's
 `--device` and grant the mapped user device access (for example via host udev
 group ownership plus `--group-add keep-groups`). Never assign the same device
 to another printer family's appliance. With `--network host`, give each
-appliance a different port and hostname so DNS-SD advertisements do not
-collide. Physical device discovery, plugin firmware load and paper output
-remain unverified without supported hardware.
+appliance a different port and hostname, and give printers on different
+appliances distinct names, so DNS-SD advertisements do not collide.
+Physical device discovery, plugin firmware load and paper output remain
+unverified without supported hardware.
 
 ### Isolating LAN discovery and USB access between coexisting appliances
 
@@ -132,9 +133,13 @@ host, each container must be its own DNS-SD and USB owner:
   before starting any service (exit code 64).
 - **DNS-SD advertisement**: set a distinct `--hostname` per appliance.
   `avahi-daemon` runs with no configured `host-name` override, so it
-  advertises under the container's own hostname; two appliances given
-  different hostnames never publish colliding mDNS/DNS-SD records for the
-  same printer, even when both use `--network host`.
+  advertises under the container's own hostname, and two appliances given
+  different hostnames never publish colliding `<host>.local` records, even
+  when both use `--network host`. The DNS-SD *instance* name for an IPP
+  printer service, however, is the printer's own name, not the container
+  hostname; give printers on different appliances distinct names (as the
+  `hplip-printer-app ... add` invocations in your deployment should already
+  do) so their `_ipp._tcp` service records do not collide too.
 - **USB device ownership**: pass only the specific printer's node under
   `/dev/bus/usb` to the one appliance that owns that physical device (for
   example `--device /dev/bus/usb/<bus>/<device>` or a narrowly scoped

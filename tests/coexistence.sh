@@ -78,12 +78,21 @@ printers_b="$(podman exec "$name_b" hplip-printer-app -u "$system_uri_b" printer
 [[ "$printers_b" != *family-a-printer* ]]
 
 # Each instance's persistent state directory is only its own; USB quirk
-# state and CUPS config are not shared between coexisting appliances.
+# state and CUPS config are not shared between coexisting appliances. Use
+# `podman unshare` for the host-side existence checks: the state dirs are
+# chowned to the mapped 65532 uid and the entrypoint chmods them 0700, so
+# the invoking host user cannot stat inside them directly.
 podman exec "$name_a" /usr/bin/bash -c 'test -s /var/lib/hplip-printer-app/usb/org.cups.usb-quirks'
 podman exec "$name_b" /usr/bin/bash -c 'test -s /var/lib/hplip-printer-app/usb/org.cups.usb-quirks'
-[[ ! -e "$state_a/family-a-only-marker" ]]
+if podman unshare test -e "$state_a/family-a-only-marker"; then
+  echo 'unexpected marker present before it was created' >&2
+  exit 1
+fi
 podman exec "$name_a" /usr/bin/bash -c 'touch /var/lib/hplip-printer-app/family-a-only-marker'
-[[ -e "$state_a/family-a-only-marker" ]]
-[[ ! -e "$state_b/family-a-only-marker" ]]
+podman unshare test -e "$state_a/family-a-only-marker"
+if podman unshare test -e "$state_b/family-a-only-marker"; then
+  echo 'marker leaked into the other appliance state volume' >&2
+  exit 1
+fi
 
 printf 'OK: two synthetic printer-family appliances coexisted on distinct ports, hostnames and state\n'
