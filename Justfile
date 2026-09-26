@@ -41,6 +41,7 @@ verify:
     just validate
     just build
     tests/oci-appliance.sh
+    tests/coexistence.sh
     just check-no-devel
 
 # No devel content in the image (fsdk-containers printing-base consumer rule 5)
