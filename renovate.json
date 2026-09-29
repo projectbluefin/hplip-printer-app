@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "forkProcessing": "enabled",
   "baseBranchPatterns": ["testing"],
-  "enabledManagers": ["custom.regex"],
+  "enabledManagers": ["custom.regex", "github-actions"],
   "automerge": false,
   "customManagers": [
     {
@@ -39,6 +39,11 @@
     {
       "matchPackageNames": ["printing-team/hplip.v2"],
       "groupName": "HPLIP driver source and application version"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "groupName": "GitHub Actions"
     }
   ]
 }
