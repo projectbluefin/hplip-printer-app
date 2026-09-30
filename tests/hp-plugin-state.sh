@@ -33,6 +33,9 @@ tests=0
 failures=0
 cases=0
 
+# White space which cannot be written directly in a portable shell script
+tab_char=$(printf '\t')
+
 ok()
 {
     tests=$((tests + 1))
@@ -561,6 +564,116 @@ run install "$work/never-downloaded" "$state" 3.23.12
 check "an install into a directory which does not exist fails" 1 "$status"
 run step "$root" "$state"
 check "a step without a transaction fails" 1 "$status"
+
+# ---------------------------------------------------------------------------
+# A journal which does not describe the directories on disk. The recovery
+# may then only refuse, never guess: every case below would otherwise
+# delete the only copy of a plugin or register a version which is not the
+# one that is loaded.
+
+echo "# An ambiguous swap is refused instead of guessed"
+upgrade_ready
+run begin "$root" "$state" install 3.23.12
+run step "$root" "$state"
+# The swap rename is performed by hand, as a termination between it and the
+# journal update which follows it cannot be reached through the command
+# line, and a second download then stages another plugin
+mv "$root/plugin_tmp" "$root/plugin"
+make_plugin "$root" plugin_tmp newer
+run recover "$root" "$state"
+check "recover refuses an ambiguous swap" 1 "$status"
+no_empty_line "the refusal prints no empty line"
+check "the active plugin is left alone" new "$(marker_of "$root/plugin")"
+check "the preserved plugin is kept" old "$(marker_of "$root/plugin_old")"
+check "the second staging directory is kept" newer "$(marker_of "$root/plugin_tmp")"
+check "the journal is kept for the next recovery" yes "$(present "$root/.plugin-txn")"
+check "the journal still names the interrupted phase" \
+    preserved "$(sed -n 's/^phase=//p' "$root/.plugin-txn")"
+
+echo "# A journal phase this version does not know is refused"
+upgrade_ready
+run begin "$root" "$state" install 3.23.12
+sed 's/^phase=.*/phase=frobnicate/' "$root/.plugin-txn" > "$root/.plugin-txn.edited"
+mv "$root/.plugin-txn.edited" "$root/.plugin-txn"
+run recover "$root" "$state"
+check "an unknown phase fails the recovery" 1 "$status"
+no_empty_line "the unknown phase prints no empty line"
+check "the unknown phase is named, not retried until the step limit" \
+    1 "$(printf '%s\n' "$out" | grep -c 'Unknown plugin transaction state "install:frobnicate"')"
+check "the installed plugin is untouched" old "$(marker_of "$root/plugin")"
+check "the staging directory is untouched" new "$(marker_of "$root/plugin_tmp")"
+check "the journal is kept" yes "$(present "$root/.plugin-txn")"
+state_after 1 3.23.8 "after refusing an unknown phase"
+
+echo "# A damaged installed flag in the journal rolls back to not installed"
+upgrade_ready
+run begin "$root" "$state" install 3.23.12
+sed 's/^old_installed=.*/old_installed=yes/' "$root/.plugin-txn" > "$root/.plugin-txn.edited"
+mv "$root/.plugin-txn.edited" "$root/.plugin-txn"
+rm -rf "$root/plugin_tmp"
+run recover "$root" "$state"
+check "the rollback succeeds" 0 "$status"
+check "the damaged flag is treated as a value, not as a number" "" "$err"
+check "the plugin directory is left in place" old "$(marker_of "$root/plugin")"
+check "the journal is removed" no "$(present "$root/.plugin-txn")"
+state_after 0 "" "after rolling back with a damaged installed flag"
+
+# ---------------------------------------------------------------------------
+# Reading the state file the Printer Application wrote. Only the "[plugin]"
+# section counts, and the application accepts indented keys, so a
+# transaction must record the values it would have to restore from exactly
+# those lines.
+
+echo "# Only the [plugin] section is read, and indented keys are read"
+start_case
+make_plugin "$root" plugin old
+make_plugin "$root" plugin_tmp new
+{
+    printf '[other]\n'
+    printf 'installed = 9\n'
+    printf 'eula = 9\n'
+    printf 'version = 9.9.9\n'
+    printf '[plugin]\n'
+    printf '%sinstalled = 1\n' "$tab_char"
+    printf '%seula = 1\n' "$tab_char"
+    printf 'version-note without an equals sign\n'
+    printf '  version = 3.23.8\n'
+    printf 'a line which is not a key\n'
+} > "$state/hplip.state"
+run begin "$root" "$state" install 3.23.12
+check "begin succeeds on an indented state file" 0 "$status"
+check "the installed flag comes from [plugin]" \
+    1 "$(sed -n 's/^old_installed=//p' "$root/.plugin-txn")"
+check "the license acceptance comes from [plugin]" \
+    1 "$(sed -n 's/^old_eula=//p' "$root/.plugin-txn")"
+check "the version comes from [plugin], not [other]" \
+    3.23.8 "$(sed -n 's/^old_version=//p' "$root/.plugin-txn")"
+rm -rf "$root/plugin_tmp"
+run recover "$root" "$state"
+check "the rollback succeeds" 0 "$status"
+state_after 1 3.23.8 "after rolling back an indented state file"
+
+# ---------------------------------------------------------------------------
+# A journal which cannot be written. The transaction must stop before it
+# moves anything, because a rename whose journal entry was lost is exactly
+# the situation the journal exists to prevent.
+
+echo "# A journal which cannot be written stops the transaction"
+if [ "$(id -u)" = 0 ]; then
+    echo "# skipped: running as root, a read-only directory is still writable"
+else
+    upgrade_ready
+    chmod 555 "$root"
+    run begin "$root" "$state" install 3.23.12
+    chmod 755 "$root"
+    check "begin fails when the journal cannot be written" 1 "$status"
+    check "no journal is left behind" no "$(present "$root/.plugin-txn")"
+    check "no temporary journal is left behind" \
+        "" "$(find "$root" -maxdepth 1 -name '.plugin-txn.tmp.*' -print)"
+    check "the installed plugin is untouched" old "$(marker_of "$root/plugin")"
+    check "the staging directory is untouched" new "$(marker_of "$root/plugin_tmp")"
+    state_after 1 3.23.8 "after a journal which could not be written"
+fi
 
 # ---------------------------------------------------------------------------
 
