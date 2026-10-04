@@ -93,7 +93,7 @@ podman unshare chown 65532:65532 hplip-state
 podman run --name hplip-printer-app --network host \
   --hostname hplip-printer-app -e PORT=18030 \
   -v "$PWD/hplip-state:/var/lib/hplip-printer-app:Z" \
-  ghcr.io/projectbluefin/hplip-printer-app:3.26.4
+  ghcr.io/projectbluefin/hplip-printer-app:3.26.4-1
 ```
 
 Persist the same volume across restarts. The web UI is available at
