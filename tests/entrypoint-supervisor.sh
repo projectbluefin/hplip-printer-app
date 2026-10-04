@@ -166,6 +166,7 @@ run_sync() {
 # "wait -n" like the real entrypoint does, signals it, and waits for it.
 run_signalled() {
     local path pid='' waited=0 runner
+    set -m
     new_run "$1"
     path="$(write_harness "$1" "$2" '
 sleep 30 &
