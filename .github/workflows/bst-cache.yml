@@ -136,10 +136,10 @@ jobs:
           # Oversized is not a build failure: skip the save and keep the
           # previous cache. Pruning cannot shrink it: `bst artifact delete`
           # drops refs, not CAS blobs.
-          if [ "${mb}" -le 9000 ]; then
+          if [[ "${mb}" =~ ^[0-9]+$ ]] && [ "${mb}" -le 9000 ]; then
             echo "fits=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::BuildStream cache is ${mb} MB (> 9000 MB); not saving"
+            echo "::warning::BuildStream cache is ${mb} MB (> 9000 MB or unreadable); not saving"
           fi
       - name: Save BuildStream cache
         id: save

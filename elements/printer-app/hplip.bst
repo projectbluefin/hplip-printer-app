@@ -23,7 +23,7 @@ environment:
   MAXJOBS: "%{max-jobs}"
 
 environment-nocache:
-- MAXJOBS
+  - MAXJOBS
 
 variables:
   conf-local: >-

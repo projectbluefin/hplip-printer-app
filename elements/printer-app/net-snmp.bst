@@ -19,7 +19,8 @@ config:
     - ./configure --prefix=/usr --libdir="%{libdir}" --disable-agent --disable-applications --disable-manuals --disable-embedded-perl --without-perl-modules --with-default-snmp-version=3 --with-sys-contact=none --with-sys-location=none --with-logfile=/dev/null --with-persistent-directory=/var/lib/hplip-printer-app/snmp
   build-commands:
     # Not parallel-safe: Debian (dh_auto_build --no-parallel) and Fedora
-    # (net-snmp.spec: "not %_smp_mflags safe") build it serially. Keep -j2.
+    # (net-snmp.spec: "not %_smp_mflags safe") build it serially (-j1).
+    # -j2 is the value that has built reliably in this repo; keep -j2.
     - make -j2
   install-commands:
     - make DESTDIR="%{install-root}" install
