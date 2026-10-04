@@ -206,7 +206,7 @@ falls back to a local build. CI passes `ci/buildstream.conf` to every `bst`
 call (`BST_FLAGS`), which fetches sources only from the Bluefin source cache.
 `bst-cache.yml` refills the cache on pushes to `testing`, nightly and on
 dispatch (saved only when an arch fits in 9000 MB uncompressed; a larger
-cache fails the refill). Reset it with
+cache warns and skips the save). Reset it with
 `gh cache delete --all`. `update-base.yml` proposes fsdk-containers junction
 bumps to `testing` daily.
 

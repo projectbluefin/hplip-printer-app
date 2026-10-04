@@ -20,6 +20,10 @@ environment:
   IMAGEPROC: disable
   CUPS_DATADIR: /usr/share/cups
   PPDC_DATADIR: /usr/share/ppdc
+  MAXJOBS: "%{max-jobs}"
+
+environment-nocache:
+  - MAXJOBS
 
 variables:
   conf-local: >-
@@ -63,7 +67,7 @@ config:
     - find . -name '*.ppd' -print0 | xargs -0 -r gzip -f
     - find data/ -regextype posix-extended -regex '.*\.(ldl|pcl|ps|pdf)' -print0 | xargs -0 -r gzip -f
     - USER=root HOME=/tmp python3 ./dat2drv.py
-    - make -j2
+    - make -j"${MAXJOBS}"
   install-commands:
     - make DESTDIR="%{install-root}" install
     # libtool archives are build-time only; the Python extension ones under
