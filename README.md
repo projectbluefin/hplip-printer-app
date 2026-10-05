@@ -701,6 +701,11 @@ TESTPAGE=/path/to/my/testpage/my_testpage.ps PPD_PATHS=/path/to/my/ppds:/my/seco
 
 ## TESTS
 
+`just check-entrypoint` runs the host-only entrypoint checks and
+`tests/test_issue_policy.py`. The policy regression keeps the canonical
+issue-lifecycle caller on `@v1` without exempting other actions from digest
+pinning, and preserves the Ubuntu runner compatibility limit.
+
 The proprietary plugin is downloaded while the web admin request which
 asked for it is waiting for an answer, so every plugin transfer is
 bounded. By default the connection has to come up within 30 seconds, the
