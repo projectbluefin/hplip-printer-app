@@ -22,7 +22,9 @@ suite](https://developers.hp.com/hp-linux-imaging-and-printing/), also
 the Information about supported printer models and their capabilities.
 
 Your contributions are welcome. Please post [issues and pull
-requests](https://github.com/OpenPrinting/hplip-printer-app).
+requests](https://github.com/projectbluefin/hplip-printer-app/issues) in
+this repository. See [docs/issue-lifecycle.md](docs/issue-lifecycle.md)
+for what happens after an issue is filed.
 
 **Note: HPLIP is actively maintained by HP, they are continuously
 adding the newest printer models and adapting the software to new
