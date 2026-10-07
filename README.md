@@ -23,8 +23,9 @@ the Information about supported printer models and their capabilities.
 
 Your contributions are welcome. Please post [issues and pull
 requests](https://github.com/projectbluefin/hplip-printer-app/issues) in
-this repository. See [docs/issue-lifecycle.md](docs/issue-lifecycle.md)
-for what happens after an issue is filed.
+this repository. See [how issues and PRs work
+here](https://github.com/projectbluefin/common/blob/main/docs/skills/label-workflow.md)
+for what happens after an issue or pull request is opened.
 
 **Note: HPLIP is actively maintained by HP, they are continuously
 adding the newest printer models and adapting the software to new
@@ -704,9 +705,8 @@ TESTPAGE=/path/to/my/testpage/my_testpage.ps PPD_PATHS=/path/to/my/ppds:/my/seco
 ## TESTS
 
 `just check-entrypoint` runs the host-only entrypoint checks and
-`tests/test_issue_policy.py`. The policy regression keeps the canonical
-issue-lifecycle caller on `@v1` without exempting other actions from digest
-pinning, and preserves the Ubuntu runner compatibility limit.
+`tests/test_renovate.py`, which preserves the Ubuntu runner compatibility
+limit in `renovate.json`.
 
 The proprietary plugin is downloaded while the web admin request which
 asked for it is waiting for an answer, so every plugin transfer is
