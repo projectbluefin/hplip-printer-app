@@ -37,6 +37,7 @@ check-entrypoint:
         bash "$t"
     done
     python3 -m unittest discover -s tests -p 'test_renovate.py'
+    python3 tests/promote-stable-gate.py
 
 fetch:
     just bst source fetch --ignore-project-source-remotes --source-remote https://cache.projectbluefin.io:11001 --deps all oci/hplip-printer-app.bst
