@@ -166,7 +166,6 @@ run_sync() {
 # "wait -n" like the real entrypoint does, signals it, and waits for it.
 run_signalled() {
     local path pid='' waited=0 runner
-    set -m
     new_run "$1"
     path="$(write_harness "$1" "$2" '
 sleep 30 &
@@ -174,8 +173,13 @@ children+=("$!")
 wait -n "${children[@]}" || true
 sleep 30
 ')"
+    # Without job control bash starts "&" jobs with SIGINT ignored, and a
+    # timeout(1) that keeps that disposition (uutils) hands it to the harness,
+    # whose INT trap then never fires. Monitor mode spawns the job normally.
+    set -m
     timeout 30 "$path" "$run_log" "$run_ready" "$run_pidfile" "$run_order" &
     runner=$!
+    set +m
     while [ "$waited" -le 400 ]; do
         pid="$(cat "$run_pidfile" 2>/dev/null || true)"
         [ -n "$pid" ] && break
