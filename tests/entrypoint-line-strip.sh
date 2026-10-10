@@ -11,14 +11,18 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 src="$root/hplip-printer-app.c"
 
-tmp_base="${TMPDIR:-$root}"
-work="$(mktemp -d "${tmp_base%/}/line-strip-test-XXXXXX")"
+work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-# Slice get_config_value from hplip-printer-app.c
-start_line="$(grep -n -E '^get_config_value\(' "$src" | head -n 1 | cut -d: -f1)"
+# Slice get_config_value from hplip-printer-app.c. A grep miss must reach the
+# error below rather than end the script silently under "set -e".
+start_line="$(grep -n -E '^get_config_value\(' "$src" | head -n 1 | cut -d: -f1 || true)"
+end_line="$(grep -n -E '^hplip_version\(' "$src" | head -n 1 | cut -d: -f1 || true)"
+if [ -z "$start_line" ] || [ -z "$end_line" ]; then
+    printf 'tests/entrypoint-line-strip.sh: could not locate get_config_value in %s\n' "$src" >&2
+    exit 1
+fi
 start_line=$((start_line - 1))
-end_line="$(grep -n -E '^hplip_version\(' "$src" | head -n 1 | cut -d: -f1)"
 end_line=$((end_line - 1))
 while [ "$end_line" -gt "$start_line" ]; do
     line_content="$(sed -n "${end_line}p" "$src")"
@@ -32,15 +36,18 @@ if [ "$end_line" -le "$start_line" ]; then
 fi
 
 # Slice command line output stripper from hplip_run_command_line
-cmd_start="$(grep -n -E '^hplip_run_command_line\(' "$src" | head -n 1 | cut -d: -f1)"
-cmd_strip="$(sed -n "${cmd_start},+30p" "$src" | grep -n "Remove newline" | head -n 1 | cut -d: -f1)"
-cmd_strip_line=$((cmd_start + cmd_strip - 1))
-strip_code="$(sed -n "${cmd_strip_line}p" "$src")"
+cmd_start="$(grep -n -E '^hplip_run_command_line\(' "$src" | head -n 1 | cut -d: -f1 || true)"
+cmd_strip=''
+if [ -n "$cmd_start" ]; then
+    cmd_strip="$(sed -n "${cmd_start},+30p" "$src" | grep -n "Remove newline" | head -n 1 | cut -d: -f1 || true)"
+fi
 
-if [ -z "${strip_code:-}" ]; then
+if [ -z "$cmd_strip" ]; then
     printf 'tests/entrypoint-line-strip.sh: could not locate command output line stripper in %s\n' "$src" >&2
     exit 1
 fi
+cmd_strip_line=$((cmd_start + cmd_strip - 1))
+strip_code="$(sed -n "${cmd_strip_line}p" "$src")"
 
 harness_c="$work/harness.c"
 cat << 'C_EOF' > "$harness_c"
