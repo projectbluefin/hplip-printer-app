@@ -212,20 +212,27 @@ dispatch (saved only when an arch fits in 9000 MB uncompressed; a larger
 cache warns and skips the save). Reset it with
 `gh cache delete --all`.
 
-PRs target `testing`. Every push to `testing` (each one already passed the
-merge queue's full build) is rebuilt, verified with `just verify` and
+PRs target `testing`. Pushes to `testing` (each one already passed the
+merge queue's full build) are rebuilt, verified with `just verify` and
 published by `registry-actions.yml` as a signed amd64+arm64 GHCR index with a
-signed SPDX SBOM and provenance. There is no manual promotion: reverting a PR
-is the rollback. Tags: immutable `sha-<commit>`, plus `<VERSION>`,
-`<VERSION>-x86_64`, `<VERSION>-aarch64` and `stable`, which move to the newest
-verified commit. There are no `latest` or `edge` aliases.
+signed SPDX SBOM and provenance. Publishes run one at a time and a newer push
+replaces any publish still pending, so a commit superseded while another
+publish is in flight is never built or tagged. There is no manual promotion:
+reverting a PR is the rollback. Tags: immutable `sha-<commit>`, plus
+`<VERSION>`, `<VERSION>-x86_64`, `<VERSION>-aarch64` and `stable`, which move
+to the newest verified commit and never to an ancestor of the commit `stable`
+already carries. Because `<VERSION>` moves, identify a build by
+`sha-<commit>` or digest. There are no `latest` or `edge` aliases.
 
 Hosted Renovate updates, on `testing`, the HPLIP source tag, application
 version, local Net-SNMP pin, SHA-pinned GitHub Actions and the
 fsdk-containers junction (`elements/fsdk-containers.bst`, tracking `main`).
 Junction bumps automerge once required checks pass. The FSDK image labels
 (`io.projectbluefin.fsdk.version`/`.ref`) are derived from the pinned junction
-at publish time, so a bare ref bump is a complete update.
+at publish time, so a bare ref bump is a complete update. Whatever lands on
+fsdk-containers `main` is therefore signed and tagged `stable` here after only
+the merge queue build and `just verify`, so that branch's protection is part of
+this image's supply chain.
 
 The publish workflow pushes, signs (index and both architecture manifests),
 attests and verifies everything by digest, and tags only after every check
