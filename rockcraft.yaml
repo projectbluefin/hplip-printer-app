@@ -495,7 +495,7 @@ parts:
     source: https://salsa.debian.org/printing-team/hplip.v2.git
     source-type: git
     source-tag: 'debian/3.22.10+dfsg0-8'
-    source-depth: 1 
+    source-depth: 1
 # ext:updatesnap
 #   version-format:
 #     format: 'debian/%V'
@@ -777,7 +777,7 @@ parts:
       set -eux
       make clean
       VERSION="`craftctl get version`"
-      make -j"8" LDFLAGS="$LDFLAGS -ljpeg" SNAP=1 VERSION="$VERSION" 
+      make -j"8" LDFLAGS="$LDFLAGS -ljpeg" SNAP=1 VERSION="$VERSION"
       make -j"8" install LDFLAGS="$LDFLAGS -ljpeg" SNAP=1 VERSION="$VERSION"  DESTDIR="$CRAFT_PART_INSTALL"
       #craftctl default
     build-packages:
