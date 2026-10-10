@@ -215,8 +215,9 @@ bumps to `testing` daily.
 
 PRs target `testing`; after a verified commit is promoted to `stable`, only
 the matching `v<VERSION>` tag can publish an immutable amd64+arm64 GHCR index
-with a signed SPDX SBOM and provenance. There are no mutable OCI `latest`,
-`edge` or `stable` aliases. The org Renovate runner updates the HPLIP source
+with a signed SPDX SBOM and provenance, and move the mutable `stable` tag to
+that index. There are no mutable OCI `latest` or `edge` aliases. The org
+Renovate runner updates the HPLIP source
 tag, application version, local Net-SNMP pin and SHA-pinned GitHub Actions on
 `testing`; no inherited Snap/Rockcraft workflow can update `stable`. Failed
 image checks block release.
@@ -225,8 +226,8 @@ The release gate derives FSDK metadata from the fsdk-containers commit pinned
 in `elements/fsdk-containers.bst` and rejects mismatched image labels.
 The release workflow pushes, signs (index and both architecture manifests),
 attests and verifies everything by digest. It creates the `<VERSION>`,
-`<VERSION>-x86_64` and `<VERSION>-aarch64` tags only after every check passes,
-so a failed release leaves no tagged, unsigned image.
+`<VERSION>-x86_64` and `<VERSION>-aarch64` tags and moves `stable` only after
+every check passes, so a failed release leaves no tagged, unsigned image.
 
 ### Properties
 
