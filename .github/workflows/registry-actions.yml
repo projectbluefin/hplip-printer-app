@@ -44,7 +44,7 @@ jobs:
           [[ "$version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-[0-9]+)?$ ]]
           upstream_version="${BASH_REMATCH[1]}"
           [[ "$upstream_source" == "$upstream_version" ]]
-          junction_ref="$(sed -n 's/^[[:space:]]*ref: \([0-9a-f]\{40\}\)$/\1/p' elements/fsdk-containers.bst)"
+          junction_ref="$(sed -n -E 's/^[[:space:]]*ref: (.*-g)?([0-9a-f]{40})$/\2/p' elements/fsdk-containers.bst)"
           [[ "$junction_ref" =~ ^[0-9a-f]{40}$ ]]
           upstream="$(mktemp -d)"
           trap 'rm -rf "$upstream"' EXIT
