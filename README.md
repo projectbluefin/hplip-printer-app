@@ -96,7 +96,7 @@ podman unshare chown 65532:65532 hplip-state
 podman run --name hplip-printer-app --network host \
   --hostname hplip-printer-app -e PORT=18030 \
   -v "$PWD/hplip-state:/var/lib/hplip-printer-app:Z" \
-  ghcr.io/projectbluefin/hplip-printer-app:3.26.4-1
+  ghcr.io/projectbluefin/hplip-printer-app:stable
 ```
 
 Persist the same volume across restarts. The web UI is available at
@@ -210,24 +210,33 @@ call (`BST_FLAGS`), which fetches sources only from the Bluefin source cache.
 `bst-cache.yml` refills the cache on pushes to `testing`, nightly and on
 dispatch (saved only when an arch fits in 9000 MB uncompressed; a larger
 cache warns and skips the save). Reset it with
-`gh cache delete --all`. `update-base.yml` proposes fsdk-containers junction
-bumps to `testing` daily.
+`gh cache delete --all`.
 
-PRs target `testing`; after a verified commit is promoted to `stable`, only
-the matching `v<VERSION>` tag can publish an immutable amd64+arm64 GHCR index
-with a signed SPDX SBOM and provenance, and move the mutable `stable` tag to
-that index. There are no mutable OCI `latest` or `edge` aliases. The org
-Renovate runner updates the HPLIP source
-tag, application version, local Net-SNMP pin and SHA-pinned GitHub Actions on
-`testing`; no inherited Snap/Rockcraft workflow can update `stable`. Failed
-image checks block release.
+PRs target `testing`. Pushes to `testing` (each one already passed the
+merge queue's full build) are rebuilt, verified with `just verify` and
+published by `registry-actions.yml` as a signed amd64+arm64 GHCR index with a
+signed SPDX SBOM and provenance. Publishes run one at a time and a newer push
+replaces any publish still pending, so a commit superseded while another
+publish is in flight is never built or tagged. There is no manual promotion:
+reverting a PR is the rollback. Tags: immutable `sha-<commit>`, plus
+`<VERSION>`, `<VERSION>-x86_64`, `<VERSION>-aarch64` and `stable`, which move
+to the newest verified commit and never to an ancestor of the commit `stable`
+already carries. Because `<VERSION>` moves, identify a build by
+`sha-<commit>` or digest. There are no `latest` or `edge` aliases.
 
-The release gate derives FSDK metadata from the fsdk-containers commit pinned
-in `elements/fsdk-containers.bst` and rejects mismatched image labels.
-The release workflow pushes, signs (index and both architecture manifests),
-attests and verifies everything by digest. It creates the `<VERSION>`,
-`<VERSION>-x86_64` and `<VERSION>-aarch64` tags and moves `stable` only after
-every check passes, so a failed release leaves no tagged, unsigned image.
+Hosted Renovate updates, on `testing`, the HPLIP source tag, application
+version, local Net-SNMP pin, SHA-pinned GitHub Actions and the
+fsdk-containers junction (`elements/fsdk-containers.bst`, tracking `main`).
+Junction bumps automerge once required checks pass. The FSDK image labels
+(`io.projectbluefin.fsdk.version`/`.ref`) are derived from the pinned junction
+at publish time, so a bare ref bump is a complete update. Whatever lands on
+fsdk-containers `main` is therefore signed and tagged `stable` here after only
+the merge queue build and `just verify`, so that branch's protection is part of
+this image's supply chain.
+
+The publish workflow pushes, signs (index and both architecture manifests),
+attests and verifies everything by digest, and tags only after every check
+passes, so a failed publish leaves no tagged, unsigned image.
 
 ### Properties
 
@@ -707,7 +716,8 @@ TESTPAGE=/path/to/my/testpage/my_testpage.ps PPD_PATHS=/path/to/my/ppds:/my/seco
 
 `just check-entrypoint` runs the host-only entrypoint checks and
 `tests/test_renovate.py`, which preserves the Ubuntu runner compatibility
-limit in `renovate.json`.
+limit in `renovate.json` and checks that a Renovate fsdk-containers ref bump
+is complete and automerged.
 
 The proprietary plugin is downloaded while the web admin request which
 asked for it is waiting for an answer, so every plugin transfer is

@@ -12,7 +12,6 @@ on:
   push:
     branches:
       - testing
-      - stable
     paths:
       - hplip-plugin-arch.c
       - hplip-plugin-arch.h
@@ -23,7 +22,6 @@ on:
   pull_request:
     branches:
       - testing
-      - stable
     paths:
       - hplip-plugin-arch.c
       - hplip-plugin-arch.h

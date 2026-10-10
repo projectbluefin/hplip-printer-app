@@ -50,7 +50,7 @@ body:
     id: image
     attributes:
       label: "Image details"
-      description: "Provide the image tag or digest you are running (for example: ghcr.io/projectbluefin/hplip-printer-app:3.26.4-1) and container host environment."
+      description: "Provide the image tag or digest you are running (for example: ghcr.io/projectbluefin/hplip-printer-app:sha-<commit> or @sha256:<digest>; version tags such as 3.26.4-1 move) and container host environment."
       placeholder: "Paste image reference and host environment details here."
       render: text
     validations:

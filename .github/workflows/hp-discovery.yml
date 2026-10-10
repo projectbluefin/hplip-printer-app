@@ -8,13 +8,13 @@ name: HP Network Discovery
 
 on:
   push:
-    branches: [testing, stable]
+    branches: [testing]
     paths:
       - 'HP'
       - 'tests/**'
       - '.github/workflows/hp-discovery.yml'
   pull_request:
-    branches: [testing, stable]
+    branches: [testing]
     paths:
       - 'HP'
       - 'tests/**'
