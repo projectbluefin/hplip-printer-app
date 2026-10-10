@@ -136,6 +136,7 @@ get_config_value(FILE *fp,
   char line[1024];
   char *value = NULL;
   int in_section = 0;
+  size_t len;
 
   if (!key || !key[0])
     return (NULL);
@@ -144,9 +145,10 @@ get_config_value(FILE *fp,
 
   while (fgets(line, sizeof(line), fp))
   {
-    while (line[strlen(line) - 1] == '\n' ||
-	   line[strlen(line) - 1] == '\r') // Remove newline
-      line[strlen(line) - 1] = '\0';
+    // Remove newline; a blank line ends up empty, never indexed below 0
+    len = strlen(line);
+    while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r'))
+      line[-- len] = '\0';
 
     if (line[0] == '[')
     {
@@ -407,7 +409,7 @@ hplip_run_command_line(pappl_system_t *system, const char *command)
 
   while (fgets(buf, sizeof(buf), fp) != NULL)
   {
-    buf[strlen(buf) - 1] = '\0'; // Remove newline
+    buf[strcspn(buf, "\n")] = '\0'; // Remove newline, if there is one
     papplLog(system, PAPPL_LOGLEVEL_DEBUG, "  %s", buf);
   }
 
