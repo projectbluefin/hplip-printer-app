@@ -58,6 +58,4 @@ config:
               'org.opencontainers.image.source': 'https://github.com/projectbluefin/hplip-printer-app'
               'org.opencontainers.image.licenses': 'Apache-2.0 AND GPL-2.0-or-later'
               'org.opencontainers.image.version': '${version}'
-              'io.projectbluefin.fsdk.version': '26.08.1'
-              'io.projectbluefin.fsdk.ref': 'b02b59ffe19a49a402f357fd5fcb1d552ebc50d7'
       EOF

@@ -9,7 +9,6 @@ on:
   push:
     branches:
       - testing
-      - stable
     paths:
       - hplip-download-policy.c
       - hplip-download-policy.h
@@ -20,7 +19,6 @@ on:
   pull_request:
     branches:
       - testing
-      - stable
     paths:
       - hplip-download-policy.c
       - hplip-download-policy.h

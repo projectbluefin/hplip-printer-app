@@ -33,12 +33,29 @@
       "datasourceTemplate": "github-tags",
       "versioningTemplate": "semver",
       "autoReplaceStringTemplate": "{{{newValue}}}\n    ref: {{{newDigest}}}"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^elements\\/fsdk-containers\\.bst$/"],
+      "matchStrings": ["track: (?<currentValue>main)\\n    ref: (?<currentDigest>[0-9a-f]{40})"],
+      "depNameTemplate": "https://github.com/projectbluefin/fsdk-containers",
+      "datasourceTemplate": "git-refs"
     }
   ],
   "packageRules": [
     {
       "matchPackageNames": ["printing-team/hplip.v2"],
       "groupName": "HPLIP driver source and application version"
+    },
+    {
+      "description": "fsdk-containers junction: a bare ref bump is complete; GitHub auto-merge enqueues it in the merge queue after required checks, and testing auto-publishes. git-refs digests carry no release timestamp, so no minimumReleaseAge.",
+      "matchDepNames": ["https://github.com/projectbluefin/fsdk-containers"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "ignoreTests": false,
+      "minimumReleaseAge": null,
+      "schedule": ["at any time"]
     },
     {
       "matchManagers": ["github-actions"],
