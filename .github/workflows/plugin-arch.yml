@@ -11,7 +11,7 @@ name: Plugin architecture matching
 on:
   push:
     branches:
-      - testing
+      - main
     paths:
       - hplip-plugin-arch.c
       - hplip-plugin-arch.h
@@ -21,7 +21,7 @@ on:
       - .github/workflows/plugin-arch.yml
   pull_request:
     branches:
-      - testing
+      - main
     paths:
       - hplip-plugin-arch.c
       - hplip-plugin-arch.h

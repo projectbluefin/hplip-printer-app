@@ -207,12 +207,12 @@ cached, they first seed it from fsdk-containers' cosign-verified
 `ghcr.io/projectbluefin/printing-base-devel:<arch>-<key>` bundle; any failure
 falls back to a local build. CI passes `ci/buildstream.conf` to every `bst`
 call (`BST_FLAGS`), which fetches sources only from the Bluefin source cache.
-`bst-cache.yml` refills the cache on pushes to `testing`, nightly and on
+`bst-cache.yml` refills the cache on pushes to `main`, nightly and on
 dispatch (saved only when an arch fits in 9000 MB uncompressed; a larger
 cache warns and skips the save). Reset it with
 `gh cache delete --all`.
 
-PRs target `testing`. Pushes to `testing` (each one already passed the
+PRs target `main`. Pushes to `main` (each one already passed the
 merge queue's full build) are rebuilt, verified with `just verify` and
 published by `registry-actions.yml` as a signed amd64+arm64 GHCR index with a
 signed SPDX SBOM and provenance. Publishes run one at a time and a newer push
@@ -224,7 +224,7 @@ to the newest verified commit and never to an ancestor of the commit `stable`
 already carries. Because `<VERSION>` moves, identify a build by
 `sha-<commit>` or digest. There are no `latest` or `edge` aliases.
 
-Hosted Renovate updates, on `testing`, the HPLIP source tag, application
+Hosted Renovate updates, on `main`, the HPLIP source tag, application
 version, local Net-SNMP pin, SHA-pinned GitHub Actions and the
 fsdk-containers junction (`elements/fsdk-containers.bst`, tracking `main`).
 Junction bumps automerge once required checks pass. The FSDK image labels
@@ -812,5 +812,5 @@ python3 tests/test-plugin-verification.py
 The dedicated CI workflow downloads these test inputs, then runs verification
 without networking as UID 65532. It never executes the archive or publishes
 its proprietary bytes. These tests cover the production verifier; they do not
-replace OCI web-consent, restart, and print-to-socket-sink integration testing
+replace OCI web-consent, restart, and print-to-socket-sink integration main
 for the runtime tracked in issues #3 and #9. Physical output needs hardware.
