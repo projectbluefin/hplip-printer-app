@@ -109,6 +109,14 @@ firmware is part of the image. Keep the volume private to its numeric owner.
 An empty volume starts with the optional plugin not installed; an unreadable
 status file still produces an error log.
 
+The image does not run `cupsd` and creates no print queue on the host. After
+adding a printer in the web UI, the appliance advertises it on the LAN via
+DNS-SD (`_ipp._tcp`) as a driverless IPP Everywhere printer at
+`ipp://<host>:18030/ipp/print/<printer-name>`. Print dialogs and the host's
+CUPS discover it there with no driver; if they do not list it, check that
+the host's own `avahi-daemon` is running and that `ippfind` or
+`avahi-browse -rt _ipp._tcp` shows the printer.
+
 Network/USB discovery requires permissions and a reachable network; if an HP
 USB printer is assigned, pass **only** its `/dev/bus/usb` device with Podman's
 `--device` and grant the mapped user device access (for example via host udev
