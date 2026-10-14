@@ -11,6 +11,8 @@
 #     libraries and rejects the x86_64 one;
 #   * a vendor bundle which lacks the architecture reports zero matches
 #     instead of silently staging a broken plugin.
+#   * a plugin directory too long for the staging path is refused with
+#     ENAMETOOLONG instead of overflowing the path buffer.
 #
 # Needs only a C compiler. A stage whose tools are missing is skipped.
 #
@@ -22,7 +24,8 @@ set -u
 cleanup() {
     rm -rf "$tmpdir"
     # The test program stages its symlinks under /tmp/hplip-arch-*.
-    rm -rf /tmp/hplip-arch-x86_64-* /tmp/hplip-arch-arm64-* /tmp/hplip-arch-none-*
+    rm -rf /tmp/hplip-arch-x86_64-* /tmp/hplip-arch-arm64-* /tmp/hplip-arch-none-* \
+        /tmp/hplip-arch-long-*
 }
 trap cleanup EXIT INT TERM
 

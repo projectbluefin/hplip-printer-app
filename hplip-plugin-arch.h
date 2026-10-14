@@ -12,7 +12,8 @@
 // the right bits regardless of how the vendor bundle named its own arch tag.
 //
 // Returns the number of libraries staged, or -1 on a real error (a
-// directory which cannot be opened, or a symlink which cannot be created).
+// directory which cannot be opened, a symlink which cannot be created, or a
+// link path longer than the 1024-byte limit, with errno ENAMETOOLONG).
 // A return of 0 is not an error: it means the vendor bundle simply has no
 // files for the requested architecture, which the caller turns into a loud
 // refusal rather than a silently broken plugin.
