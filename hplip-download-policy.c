@@ -72,6 +72,7 @@ hplip_download_policy_defaults(
   policy->total_timeout   = HPLIP_DOWNLOAD_TOTAL_TIMEOUT_DEFAULT;
   policy->stall_limit     = HPLIP_DOWNLOAD_STALL_LIMIT_DEFAULT;
   policy->stall_time      = HPLIP_DOWNLOAD_STALL_TIME_DEFAULT;
+  policy->max_size        = HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT;
   policy->rejected        = 0;
 }
 
@@ -111,6 +112,36 @@ hplip_download_policy_from_env(
 				   HPLIP_DOWNLOAD_STALL_TIME_DEFAULT,
 				   1L, HPLIP_DOWNLOAD_STALL_TIME_MAX,
 				   &policy->rejected);
+  policy->max_size =
+    hplip_download_policy_env_long(HPLIP_DOWNLOAD_MAX_SIZE_ENV,
+				   HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT,
+				   1L, HPLIP_DOWNLOAD_MAX_SIZE_MAX,
+				   &policy->rejected);
+}
+
+
+//
+// 'hplip_download_policy_cap_size()' - Lower the size cap for one
+//                                      transfer.
+//
+// The caller knows more about a single transfer than the environment
+// does: the plugin index announces the size of the plugin archive, and
+// the index and signature are known to be small.  A cap which is
+// smaller than the one in force replaces it; a larger or non-positive
+// one is ignored, so that nothing a caller passes can widen the bound
+// the operator configured.
+//
+
+void
+hplip_download_policy_cap_size(
+    hplip_download_policy_t *policy,		// I - Policy to tighten
+    long                    max_size)		// I - Bytes this transfer may deliver
+{
+  if (!policy || max_size <= 0)
+    return;
+
+  if (max_size < policy->max_size)
+    policy->max_size = max_size;
 }
 
 
@@ -141,6 +172,14 @@ hplip_download_policy_apply(
   curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, policy->stall_limit);
   curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, policy->stall_time);
 
+  // Bound how much may arrive at all.  A Content-Length above the cap
+  // is refused before the body starts; libcurl 8.4.0 and later also
+  // abort a body of unknown length once it passes the cap, so neither
+  // an oversized file nor an endless one can fill the temporary
+  // directory.  The size and SHA-1 checks after the transfer still
+  // decide whether what did arrive is the file the index described.
+  curl_easy_setopt(curl, CURLOPT_MAXFILESIZE, policy->max_size);
+
   // Nobody is watching a progress bar for a download triggered from the
   // web interface; keep libcurl from calling a progress function.
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
@@ -169,7 +208,8 @@ hplip_download_policy_message(
   long	connect_timeout = policy ? policy->connect_timeout : 0L,
 	total_timeout   = policy ? policy->total_timeout : 0L,
 	stall_limit     = policy ? policy->stall_limit : 0L,
-	stall_time      = policy ? policy->stall_time : 0L;
+	stall_time      = policy ? policy->stall_time : 0L,
+	max_size        = policy ? policy->max_size : 0L;
 
 
   if (!buf || bufsize == 0)
@@ -224,6 +264,12 @@ hplip_download_policy_message(
       // Not "the downloaded data ...": the plugin page treats the word
       // "downloaded" in a status line as "the license page comes next".
       snprintf(buf, bufsize, "the data received could not be written to disk");
+      break;
+
+    case CURLE_FILESIZE_EXCEEDED:
+      snprintf(buf, bufsize,
+	       "the server offered a file larger than the %ld bytes allowed for this transfer",
+	       max_size);
       break;
 
     default:

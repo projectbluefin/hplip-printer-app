@@ -723,18 +723,23 @@ The proprietary plugin is downloaded while the web admin request which
 asked for it is waiting for an answer, so every plugin transfer is
 bounded. By default the connection has to come up within 30 seconds, the
 whole transfer has to finish within 900 seconds, and a transfer which
-stays below 1024 bytes per second for 60 seconds is aborted. A download
-which hits one of these bounds removes its temporary file and reports
-what went wrong on the plugin page of the web interface, instead of
-holding the request open and instead of leaving a partial file where the
-installer could pick it up.
+stays below 1024 bytes per second for 60 seconds is aborted. Each
+transfer is also capped in size: the plugin archive at the size HP's
+index announced for it (never above 256 MiB), the index itself at 1 MiB
+and the detached signature at 64 KiB, so a server which answers with far
+more than expected, or never stops answering, cannot fill the temporary
+directory. A download which hits one of these bounds removes its
+temporary file and reports what went wrong on the plugin page of the web
+interface, instead of holding the request open and instead of leaving a
+partial file where the installer could pick it up.
 
 The bounds can be changed for an unusually slow mirror with the
 environment variables `HPLIP_PLUGIN_CONNECT_TIMEOUT`,
-`HPLIP_PLUGIN_TIMEOUT`, `HPLIP_PLUGIN_STALL_LIMIT` and
-`HPLIP_PLUGIN_STALL_TIME` (seconds, seconds, bytes per second, seconds).
-A value which is not a positive whole number, or which is out of range,
-is ignored and logged, and the built-in value is used for it instead.
+`HPLIP_PLUGIN_TIMEOUT`, `HPLIP_PLUGIN_STALL_LIMIT`,
+`HPLIP_PLUGIN_STALL_TIME` and `HPLIP_PLUGIN_MAX_SIZE` (seconds, seconds,
+bytes per second, seconds, bytes). A value which is not a positive whole
+number, or which is out of range, is ignored and logged, and the
+built-in value is used for it instead.
 
 The tests for this need neither PAPPL nor libcurl: the bounds live in
 `hplip-download-policy.c`, which the tests build against a stand-in for

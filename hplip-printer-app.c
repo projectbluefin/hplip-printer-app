@@ -268,14 +268,18 @@ hplip_plugin_status(pappl_system_t *system)
 //
 // Every transfer is bounded by connect, total, and stall timeouts, so a
 // server which accepts the connection but never answers cannot hold the
-// web admin request which triggered the download open forever.  On
-// failure the caller gets NULL, a sentence describing what went wrong
-// in 'error', and no file left behind.
+// web admin request which triggered the download open forever, and by
+// a size cap, so a server which answers with far more than the caller
+// expects cannot fill the temporary directory.  'max_size' is the
+// largest body this particular transfer may deliver (0 leaves the
+// policy's own cap in force); it can only tighten the configured cap,
+// never widen it.  On failure the caller gets NULL, a sentence
+// describing what went wrong in 'error', and no file left behind.
 //
 
 char*
 hplip_download_file(pappl_system_t *system, const char *url,
-		    char *error, size_t error_size)
+		    long max_size, char *error, size_t error_size)
 {
   int           fd;
   char          tempfile[1024] = "";
@@ -295,15 +299,17 @@ hplip_download_file(pappl_system_t *system, const char *url,
   hplip_download_policy_from_env(&policy);
   if (policy.rejected)
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
-	     "Ignored %d unusable plugin download bound setting(s), the built-in values are in use. See the %s, %s, %s and %s environment variables.",
+	     "Ignored %d unusable plugin download bound setting(s), the built-in values are in use. See the %s, %s, %s, %s and %s environment variables.",
 	     policy.rejected,
 	     HPLIP_DOWNLOAD_CONNECT_TIMEOUT_ENV, HPLIP_DOWNLOAD_TOTAL_TIMEOUT_ENV,
-	     HPLIP_DOWNLOAD_STALL_LIMIT_ENV, HPLIP_DOWNLOAD_STALL_TIME_ENV);
+	     HPLIP_DOWNLOAD_STALL_LIMIT_ENV, HPLIP_DOWNLOAD_STALL_TIME_ENV,
+	     HPLIP_DOWNLOAD_MAX_SIZE_ENV);
+  hplip_download_policy_cap_size(&policy, max_size);
 
   papplLog(system, PAPPL_LOGLEVEL_DEBUG,
-	   "Downloading %s (connect timeout %lds, total timeout %lds, abort after %lds below %ld bytes/s)",
+	   "Downloading %s (connect timeout %lds, total timeout %lds, abort after %lds below %ld bytes/s, at most %ld bytes)",
 	   url, policy.connect_timeout, policy.total_timeout,
-	   policy.stall_time, policy.stall_limit);
+	   policy.stall_time, policy.stall_limit, policy.max_size);
 
   // Setup curl
   curl = curl_easy_init();
@@ -689,6 +695,7 @@ hplip_download_plugin(pappl_system_t *system,
        *ret = NULL;
   FILE *fp = NULL;
   size_t plugin_size;
+  long plugin_size_cap;
   char buf[1024];
   char reason[512];
   struct stat st;
@@ -707,6 +714,7 @@ hplip_download_plugin(pappl_system_t *system,
   papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	   "Getting plugin index from HP ...");
   if ((plugin_conf = hplip_download_file(system, PLUGIN_CONF_URL,
+					 HPLIP_DOWNLOAD_INDEX_MAX_SIZE,
 					 reason, sizeof(reason))) == NULL)
   {
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
@@ -759,6 +767,12 @@ hplip_download_plugin(pappl_system_t *system,
     goto out;
   }
 
+  // Cap the plugin transfer at the size the index announced.  A size the
+  // cap cannot express is left to the policy's own ceiling, which the
+  // transfer then fails against instead of being accepted unbounded.
+  plugin_size_cap = plugin_size <= (size_t)HPLIP_DOWNLOAD_MAX_SIZE_MAX ?
+                      (long)plugin_size : 0L;
+
   fclose(fp);
   fp = NULL;
 #if HPLIP_OCI
@@ -782,7 +796,11 @@ hplip_download_plugin(pappl_system_t *system,
 	   version);
   papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	   "Trying URL: %s", url);
+  // The index said how large the plugin is, so nothing larger than that
+  // is accepted from either location.  The size and checksum checks
+  // below still have to pass on what does arrive.
   if ((plugin_file = hplip_download_file(system, url,
+					 plugin_size_cap,
 					 reason, sizeof(reason))) == NULL)
   {
     papplLog(system, PAPPL_LOGLEVEL_DEBUG,
@@ -792,6 +810,7 @@ hplip_download_plugin(pappl_system_t *system,
     papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	     "Trying URL: %s", buf);
     if ((plugin_file = hplip_download_file(system, buf,
+					   plugin_size_cap,
 					   reason, sizeof(reason))) == NULL)
     {
       papplLog(system, PAPPL_LOGLEVEL_ERROR,
@@ -814,6 +833,7 @@ hplip_download_plugin(pappl_system_t *system,
   papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	   "Using URL: %s", buf);
   if ((signature_file = hplip_download_file(system, buf,
+					    HPLIP_DOWNLOAD_SIGNATURE_MAX_SIZE,
 					    reason, sizeof(reason))) == NULL)
   {
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
