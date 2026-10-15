@@ -26,8 +26,13 @@ hplip_stage_plugin_libs(const char *plugin_dir, const char *arch)
   // plugin_dir is the directory which holds the staged "plugin_tmp" folder,
   // exactly as hplip_install_plugin() passes it.
   len = snprintf(path, sizeof(path), "%s/plugin_tmp", plugin_dir);
-  if (len < 0 || (size_t)len >= sizeof(path))
+  if (len < 0)
     return -1;
+  if ((size_t)len >= sizeof(path))
+  {
+    errno = ENAMETOOLONG;
+    return -1;
+  }
 
   d = opendir(path);
   if (d == NULL)
