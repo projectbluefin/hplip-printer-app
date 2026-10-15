@@ -2,7 +2,7 @@ name: FSDK OCI CI
 
 on:
   pull_request:
-    branches: [testing]
+    branches: [main]
   merge_group:
   workflow_dispatch:
 
