@@ -79,6 +79,8 @@ curl_easy_strerror(CURLcode code)
       return ("SSL connect error");
     case CURLE_GOT_NOTHING:
       return ("Server returned nothing (no headers, no data)");
+    case CURLE_FILESIZE_EXCEEDED:
+      return ("Maximum file size exceeded");
     default:
       return ("Unknown error");
   }
@@ -180,6 +182,7 @@ clear_env(void)
   unsetenv(HPLIP_DOWNLOAD_TOTAL_TIMEOUT_ENV);
   unsetenv(HPLIP_DOWNLOAD_STALL_LIMIT_ENV);
   unsetenv(HPLIP_DOWNLOAD_STALL_TIME_ENV);
+  unsetenv(HPLIP_DOWNLOAD_MAX_SIZE_ENV);
 }
 
 /* Tests */
@@ -201,6 +204,8 @@ test_defaults(void)
 	     "default stall limit");
   check_long(policy.stall_time, HPLIP_DOWNLOAD_STALL_TIME_DEFAULT,
 	     "default stall time");
+  check_long(policy.max_size, HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT,
+	     "default size cap");
   check_long(policy.rejected, 0, "no override rejected by default");
 
   /* The point of the exercise: every bound is finite and non-zero, so
@@ -209,6 +214,15 @@ test_defaults(void)
   check(policy.total_timeout > 0, "default total timeout is positive");
   check(policy.stall_limit > 0, "default stall limit is positive");
   check(policy.stall_time > 0, "default stall time is positive");
+  check(policy.max_size > 0, "default size cap is positive");
+  check(policy.max_size <= HPLIP_DOWNLOAD_MAX_SIZE_MAX,
+	"default size cap fits CURLOPT_MAXFILESIZE's long");
+  check(HPLIP_DOWNLOAD_INDEX_MAX_SIZE > 0 &&
+	HPLIP_DOWNLOAD_INDEX_MAX_SIZE < policy.max_size,
+	"the index cap is positive and tighter than the plugin cap");
+  check(HPLIP_DOWNLOAD_SIGNATURE_MAX_SIZE > 0 &&
+	HPLIP_DOWNLOAD_SIGNATURE_MAX_SIZE < policy.max_size,
+	"the signature cap is positive and tighter than the plugin cap");
   check(policy.total_timeout >= policy.connect_timeout,
 	 "total timeout is not shorter than the connect timeout");
 }
@@ -223,6 +237,7 @@ test_env_overrides(void)
   setenv(HPLIP_DOWNLOAD_TOTAL_TIMEOUT_ENV, "11", 1);
   setenv(HPLIP_DOWNLOAD_STALL_LIMIT_ENV, "13", 1);
   setenv(HPLIP_DOWNLOAD_STALL_TIME_ENV, "17", 1);
+  setenv(HPLIP_DOWNLOAD_MAX_SIZE_ENV, "19", 1);
 
   hplip_download_policy_defaults(&policy);
   hplip_download_policy_from_env(&policy);
@@ -231,6 +246,7 @@ test_env_overrides(void)
   check_long(policy.total_timeout, 11, "overridden total timeout");
   check_long(policy.stall_limit, 13, "overridden stall limit");
   check_long(policy.stall_time, 17, "overridden stall time");
+  check_long(policy.max_size, 19, "overridden size cap");
   check_long(policy.rejected, 0, "valid overrides are not rejected");
 
   clear_env();
@@ -256,6 +272,7 @@ test_env_rejects_unusable_values(void)
     setenv(HPLIP_DOWNLOAD_TOTAL_TIMEOUT_ENV, bad[i], 1);
     setenv(HPLIP_DOWNLOAD_STALL_LIMIT_ENV, bad[i], 1);
     setenv(HPLIP_DOWNLOAD_STALL_TIME_ENV, bad[i], 1);
+    setenv(HPLIP_DOWNLOAD_MAX_SIZE_ENV, bad[i], 1);
 
     hplip_download_policy_defaults(&policy);
     hplip_download_policy_from_env(&policy);
@@ -268,11 +285,13 @@ test_env_rejects_unusable_values(void)
 	       "unusable stall limit kept the default");
     check_long(policy.stall_time, HPLIP_DOWNLOAD_STALL_TIME_DEFAULT,
 	       "unusable stall time kept the default");
+    check_long(policy.max_size, HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT,
+	       "unusable size cap kept the default");
 
     /* An empty or unset variable is "not configured", not an error;
        everything else here was supplied and thrown away. */
     if (bad[i][0])
-      check_long(policy.rejected, 4, "four unusable overrides were counted");
+      check_long(policy.rejected, 5, "five unusable overrides were counted");
     else
       check_long(policy.rejected, 0, "an empty override is not an error");
   }
@@ -287,6 +306,8 @@ test_env_rejects_unusable_values(void)
     setenv(HPLIP_DOWNLOAD_CONNECT_TIMEOUT_ENV, huge, 1);
     setenv(HPLIP_DOWNLOAD_TOTAL_TIMEOUT_ENV,
 	   "99999999999999999999999", 1);
+    /* 2 GiB: one above what CURLOPT_MAXFILESIZE's long can carry. */
+    setenv(HPLIP_DOWNLOAD_MAX_SIZE_ENV, "2147483648", 1);
 
     hplip_download_policy_defaults(&policy);
     hplip_download_policy_from_env(&policy);
@@ -295,7 +316,9 @@ test_env_rejects_unusable_values(void)
 	       "above-maximum connect timeout kept the default");
     check_long(policy.total_timeout, HPLIP_DOWNLOAD_TOTAL_TIMEOUT_DEFAULT,
 	       "unparsable total timeout kept the default");
-    check_long(policy.rejected, 2, "two above-range overrides were counted");
+    check_long(policy.max_size, HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT,
+	       "above-maximum size cap kept the default");
+    check_long(policy.rejected, 3, "three above-range overrides were counted");
   }
 
   clear_env();
@@ -321,6 +344,8 @@ test_env_overrides_are_independent(void)
 	     "untouched total timeout keeps the default");
   check_long(policy.stall_limit, HPLIP_DOWNLOAD_STALL_LIMIT_DEFAULT,
 	     "untouched stall limit keeps the default");
+  check_long(policy.max_size, HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT,
+	     "untouched size cap keeps the default");
   check_long(policy.rejected, 1, "one unusable override was counted");
 
   clear_env();
@@ -340,11 +365,12 @@ test_apply_sets_every_bound(void)
   policy.total_timeout   = 5;
   policy.stall_limit     = 7;
   policy.stall_time      = 9;
+  policy.max_size        = 11;
 
   hplip_download_policy_apply(curl, &policy);
 
   check_long(n_overflow, 0, "no option call was dropped");
-  check_long(n_recorded, 6, "exactly the expected options were set");
+  check_long(n_recorded, 7, "exactly the expected options were set");
 
   /* A stalled endpoint is only bounded if all four are on the handle. */
   check(recorded_value(CURLOPT_CONNECTTIMEOUT, &value),
@@ -360,6 +386,12 @@ test_apply_sets_every_bound(void)
 	"CURLOPT_LOW_SPEED_TIME is set");
   check_long(value, 9, "CURLOPT_LOW_SPEED_TIME value");
 
+  /* An oversized or endless body is only refused if the cap is on the
+     handle too. */
+  check(recorded_value(CURLOPT_MAXFILESIZE, &value),
+	"CURLOPT_MAXFILESIZE is set");
+  check_long(value, 11, "CURLOPT_MAXFILESIZE value");
+
   /* libcurl only honours the timeouts above without signals when it is
      told not to use them, and the web interface is threaded. */
   check(recorded_value(CURLOPT_NOSIGNAL, &value), "CURLOPT_NOSIGNAL is set");
@@ -368,6 +400,46 @@ test_apply_sets_every_bound(void)
   check(recorded_value(CURLOPT_NOPROGRESS, &value),
 	"CURLOPT_NOPROGRESS is set");
   check_long(value, 1, "CURLOPT_NOPROGRESS value");
+}
+
+/* A caller may only ever tighten the size cap: the index's announced
+   plugin size and the fixed index and signature caps are all smaller
+   than the configured ceiling, and nothing passed in may raise it. */
+static void
+test_cap_size_only_tightens(void)
+{
+  hplip_download_policy_t policy;
+
+  clear_env();
+  hplip_download_policy_defaults(&policy);
+
+  hplip_download_policy_cap_size(&policy, HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT + 1);
+  check_long(policy.max_size, HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT,
+	     "a larger cap does not widen the bound");
+
+  hplip_download_policy_cap_size(&policy, 0);
+  check_long(policy.max_size, HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT,
+	     "a zero cap leaves the bound alone");
+
+  hplip_download_policy_cap_size(&policy, -5);
+  check_long(policy.max_size, HPLIP_DOWNLOAD_MAX_SIZE_DEFAULT,
+	     "a negative cap leaves the bound alone");
+
+  hplip_download_policy_cap_size(&policy, 4096);
+  check_long(policy.max_size, 4096, "a smaller cap tightens the bound");
+
+  hplip_download_policy_cap_size(&policy, 8192);
+  check_long(policy.max_size, 4096, "a cap cannot be loosened again");
+
+  /* The operator's override is a ceiling for the caller as well. */
+  setenv(HPLIP_DOWNLOAD_MAX_SIZE_ENV, "100", 1);
+  hplip_download_policy_defaults(&policy);
+  hplip_download_policy_from_env(&policy);
+  hplip_download_policy_cap_size(&policy, 1000);
+  check_long(policy.max_size, 100, "the environment ceiling still holds");
+  clear_env();
+
+  hplip_download_policy_cap_size(NULL, 1);
 }
 
 static void
@@ -478,7 +550,8 @@ test_message_covers_the_common_failures(void)
     { CURLE_SSL_CONNECT_ERROR, "secure connection" },
     { CURLE_PARTIAL_FILE, "whole file had arrived" },
     { CURLE_HTTP_RETURNED_ERROR, "refused to serve" },
-    { CURLE_WRITE_ERROR, "could not be written to disk" }
+    { CURLE_WRITE_ERROR, "could not be written to disk" },
+    { CURLE_FILESIZE_EXCEEDED, "larger than the" }
   };
   size_t	i;
   char		buf[512];
@@ -578,6 +651,7 @@ test_message_cannot_be_mistaken_for_success(void)
     CURLE_OPERATION_TIMEDOUT,
     CURLE_SSL_CONNECT_ERROR,
     CURLE_GOT_NOTHING,
+    CURLE_FILESIZE_EXCEEDED,
     (CURLcode)999
   };
   static const int connected_flags[] = { 0, 1 };
@@ -640,6 +714,7 @@ main(void)
   test_env_rejects_unusable_values();
   test_env_overrides_are_independent();
   test_apply_sets_every_bound();
+  test_cap_size_only_tightens();
   test_apply_is_null_safe();
   test_message_names_the_connect_timeout();
   test_message_names_the_total_timeout();

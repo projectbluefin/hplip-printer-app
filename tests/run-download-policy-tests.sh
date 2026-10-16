@@ -192,11 +192,25 @@ else
 	echo $?
     }
 
+    # The size cap the application applies to every plugin transfer, as
+    # a curl command line option.  Below the healthy body (8 bytes) it has
+    # to refuse the file; at the body size it has to let it through.
+    capped() {
+	# capped <max bytes> <url>: echoes curl's exit status
+	curl --connect-timeout 1 --max-time 6 --max-filesize "$1" \
+	     --silent --show-error --output /dev/null "$2" >/dev/null 2>&1
+	echo $?
+    }
+
     # A healthy endpoint has to succeed, otherwise "it failed" below would
     # prove nothing at all about the bounds.
     if start_server healthy; then
-	check "a healthy endpoint is downloaded" "0" \
-	      "$(bounded "http://127.0.0.1:$server_port/plugin.conf")"
+	url="http://127.0.0.1:$server_port/plugin.conf"
+	check "a healthy endpoint is downloaded" "0" "$(bounded "$url")"
+	check "a body within the size cap is downloaded" "0" \
+	      "$(capped 8 "$url")"
+	check "a body above the size cap is refused (curl exit 63)" "63" \
+	      "$(capped 7 "$url")"
     else
 	check "the healthy test server starts" "yes" "no"
 	sed 's/^/  /' "$tmpdir/server.err"
