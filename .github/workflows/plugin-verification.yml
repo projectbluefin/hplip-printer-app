@@ -2,9 +2,9 @@ name: HP plugin signature verification
 
 on:
   pull_request:
-    branches: [testing]
+    branches: [main]
   push:
-    branches: [testing]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

@@ -1468,7 +1468,7 @@ hplip_web_plugin(
 #endif // SNAP
   }
 
-  // Load license text 
+  // Load license text
   if (buf[0])
   {
     // Open license file

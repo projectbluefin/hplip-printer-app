@@ -12,13 +12,13 @@ name: HP Plugin State
 
 on:
   push:
-    branches: [testing]
+    branches: [main]
     paths:
       - 'scripts/hplip-plugin-state.sh'
       - 'tests/**'
       - '.github/workflows/hp-plugin-state.yml'
   pull_request:
-    branches: [testing]
+    branches: [main]
     paths:
       - 'scripts/hplip-plugin-state.sh'
       - 'tests/**'
