@@ -820,5 +820,5 @@ python3 tests/test-plugin-verification.py
 The dedicated CI workflow downloads these test inputs, then runs verification
 without networking as UID 65532. It never executes the archive or publishes
 its proprietary bytes. These tests cover the production verifier; they do not
-replace OCI web-consent, restart, and print-to-socket-sink integration main
+replace OCI web-consent, restart, and print-to-socket-sink integration testing
 for the runtime tracked in issues #3 and #9. Physical output needs hardware.
