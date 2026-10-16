@@ -15,4 +15,4 @@ Prow drives review and merge commands: `/` commands in comments set labels, revi
 
 ## Branches and releases
 
-Target `main` for development and fsdk-containers updates; promote verified commits to `stable` with `promote-stable.yml`, which rebuilds and verifies both architectures before fast-forwarding `stable`. Only version tags on `stable` publish immutable OCI releases.
+Target `main` for development and fsdk-containers updates. There is no manual promotion step: every push to `main` (each one already passed the merge queue's full build) is rebuilt, verified with `just verify` and published by `registry-actions.yml` as a signed amd64+arm64 GHCR index, which then moves `<VERSION>` and `stable` to that commit (never backwards to an ancestor of what `stable` already carries). Reverting a PR is the rollback. Identify a build by its immutable `sha-<commit>` tag or digest; see `README.md` for the full tag contract.
