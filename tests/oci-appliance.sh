@@ -5,6 +5,7 @@ image=ghcr.io/projectbluefin/hplip-printer-app:build
 name=hplip-printer-app-smoke
 failure_name=hplip-printer-app-child-failure
 invalid_name=hplip-printer-app-invalid-port
+no_web_name=hplip-printer-app-no-web
 port="${PORT:-18030}"
 sink_port="$((port + 1000))"
 state="$(mktemp -d)"
@@ -14,7 +15,7 @@ cookies="$(mktemp)"
 sink_pid=
 
 cleanup() {
-  podman rm -f "$name" "$failure_name" "$invalid_name" >/dev/null 2>&1 || true
+  podman rm -f "$name" "$failure_name" "$invalid_name" "$no_web_name" >/dev/null 2>&1 || true
   if [[ -n "$sink_pid" ]]; then
     kill "$sink_pid" >/dev/null 2>&1 || true
     wait "$sink_pid" 2>/dev/null || true
@@ -160,6 +161,38 @@ status=0
 podman run --name "$invalid_name" -e PORT=invalid "$image" >/dev/null 2>&1 || status=$?
 [[ "$status" == 64 ]]
 
+# no-web-interface must close every web route, including the plugin admin
+# form this application registers itself and the log views PAPPL registers in
+# papplSystemRun() regardless of the web interface, while IPP keeps working.
+http_status() {
+  local scheme="$1" path="$2"
+  curl --insecure --silent --output /dev/null --write-out '%{http_code}' \
+    "${scheme}://127.0.0.1:${port}${path}" || true
+}
+podman run -d --name "$no_web_name" --network host -e PORT="$port" \
+  -e PRINTER_APP_SERVER_OPTIONS=no-web-interface "$image" >/dev/null
+for _ in $(seq 1 90); do
+  [[ "$(http_status http /)" == 404 && "$(http_status https /)" == 404 ]] && break
+  sleep 1
+done
+if [[ "$(http_status http /)" != 404 || "$(http_status https /)" != 404 ]]; then
+  podman logs "$no_web_name" >&2 || true
+  printf 'FAIL: listener did not answer (with 404) after starting with no-web-interface\n' >&2
+  exit 1
+fi
+for scheme in http https; do
+  for path in / /addprinter /config /network /security /plugin /logs /logfile.txt; do
+    status="$(http_status "$scheme" "$path")"
+    if [[ "$status" != 404 ]]; then
+      printf 'FAIL: %s://127.0.0.1:%s%s returned %s with no-web-interface, expected 404\n' "$scheme" "$port" "$path" "$status" >&2
+      exit 1
+    fi
+  done
+done
+podman exec "$no_web_name" hplip-printer-app -u "$system_uri" printers >/dev/null
+podman stop --time 15 "$no_web_name" >/dev/null
+podman rm "$no_web_name" >/dev/null
+
 # An upgrade killed after the plugin directories were exchanged but before
 # the new version was registered (issue #16): the next start must complete
 # it with the verified new plugin and leave nothing unexplained behind.
@@ -204,4 +237,4 @@ podman exec "$name" /usr/bin/bash -c '
 '
 podman stop --time 15 "$name" >/dev/null
 podman rm "$name" >/dev/null
-printf 'OK: HPLIP image printed PCL raster over IPP/socket, preserved state and recovered an interrupted plugin upgrade\n'
+printf 'OK: HPLIP image printed PCL raster over IPP/socket, preserved state, closed every web route under no-web-interface and recovered an interrupted plugin upgrade\n'

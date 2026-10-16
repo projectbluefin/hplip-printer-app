@@ -1684,6 +1684,15 @@ hplip_web_plugin(
 //                            adds this page to the web interface.
 //
 
+static bool
+hplip_not_found(pappl_client_t *client,	// I - Client
+		void           *data)	// I - Global data (unused)
+{
+  (void)data;
+
+  return (papplClientRespond(client, HTTP_STATUS_NOT_FOUND, NULL, NULL, 0, 0));
+}
+
 void
 hplip_plugin_support(void *data)
 {
@@ -1747,6 +1756,20 @@ hplip_plugin_support(void *data)
       }
       pthread_mutex_unlock(&plugin_install_mutex);
     }
+  }
+
+  // The plugin page is an admin form (it downloads and installs the
+  // proprietary plugin), so honour no-web-interface like PAPPL's own admin
+  // pages do. PAPPL also registers /logs and /logfile.txt in papplSystemRun()
+  // whenever web-log is set, independent of the web interface, so claim both
+  // paths here with 404 handlers; the first registration of a path wins.
+  if (!(papplSystemGetOptions(system) & PAPPL_SOPTIONS_WEB_INTERFACE))
+  {
+    papplSystemAddResourceCallback(system, "/logs", "text/html",
+				   (pappl_resource_cb_t)hplip_not_found, NULL);
+    papplSystemAddResourceCallback(system, "/logfile.txt", "text/plain",
+				   (pappl_resource_cb_t)hplip_not_found, NULL);
+    return;
   }
 
   // Add web interface page to manage the plugin

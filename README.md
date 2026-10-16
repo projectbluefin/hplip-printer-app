@@ -145,7 +145,10 @@ for a malformed value, `78` for a value this image cannot honour):
 
 `PRINTER_APP_SERVER_OPTIONS=no-web-interface` is therefore the only supported
 way to secure the web admin interface today. It also removes the per-printer
-"Device Settings" page that pappl-retrofit registers.
+"Device Settings" page that pappl-retrofit registers, the proprietary plugin
+page (`/plugin`) and PAPPL's log views (`/logs`, `/logfile.txt`), so every web
+route answers `404` while IPP printing keeps working. `tests/oci-appliance.sh`
+verifies that against the built image.
 
 ### Isolating LAN discovery and USB access between coexisting appliances
 
