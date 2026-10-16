@@ -8,7 +8,7 @@ name: Plugin download bounds
 on:
   push:
     branches:
-      - testing
+      - main
     paths:
       - hplip-download-policy.c
       - hplip-download-policy.h
@@ -18,7 +18,7 @@ on:
       - .github/workflows/plugin-download-bounds.yml
   pull_request:
     branches:
-      - testing
+      - main
     paths:
       - hplip-download-policy.c
       - hplip-download-policy.h
