@@ -26,8 +26,13 @@ hplip_stage_plugin_libs(const char *plugin_dir, const char *arch)
   // plugin_dir is the directory which holds the staged "plugin_tmp" folder,
   // exactly as hplip_install_plugin() passes it.
   len = snprintf(path, sizeof(path), "%s/plugin_tmp", plugin_dir);
-  if (len < 0 || (size_t)len >= sizeof(path))
+  if (len < 0)
     return -1;
+  if ((size_t)len >= sizeof(path))
+  {
+    errno = ENAMETOOLONG;
+    return -1;
+  }
 
   d = opendir(path);
   if (d == NULL)
@@ -35,6 +40,12 @@ hplip_stage_plugin_libs(const char *plugin_dir, const char *arch)
 
   // Build "<plugin_dir>/plugin_tmp/" so each symlink is created inside the
   // staging folder, next to the library it names.
+  if ((size_t)len + 1 >= sizeof(path))
+  {
+    closedir(d);
+    errno = ENAMETOOLONG;
+    return -1;
+  }
   path[len] = '/';
   len ++;
 
@@ -50,6 +61,16 @@ hplip_stage_plugin_libs(const char *plugin_dir, const char *arch)
 	p > entry->d_name && *(p - 1) == '-' &&
 	strncmp(p + strlen(arch), ".so", 3) == 0)
     {
+      // The link name is the vendor name minus "-<arch>"; refuse it rather
+      // than write past the end of path when the two do not fit together.
+      if ((size_t)len + strlen(entry->d_name) - strlen(arch) - 1 >=
+          sizeof(path))
+      {
+        closedir(d);
+        errno = ENAMETOOLONG;
+        return -1;
+      }
+
       // "<component>-<arch>.so" -> "<component>.so"
       memmove(path + len, entry->d_name, (p - entry->d_name) - 1);
       memmove(path + len + (p - entry->d_name) - 1, p + strlen(arch),

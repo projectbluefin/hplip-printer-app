@@ -16,6 +16,7 @@
 #include "hplip-plugin-arch.h"
 
 #include <dirent.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +45,7 @@ check(const char *what, int condition)
 static void
 make_vendor_file(const char *dir, const char *name)
 {
-  char path[1024];
+  char path[4096];
   FILE *f;
 
   snprintf(path, sizeof(path), "%s/%s", dir, name);
@@ -103,7 +104,7 @@ count_links(const char *plugin_tmp)
     return -1;
   while ((entry = readdir(d)) != NULL)
   {
-    char path[1024];
+    char path[4096];
     struct stat st;
 
     snprintf(path, sizeof(path), "%s/%s", plugin_tmp, entry->d_name);
@@ -209,12 +210,53 @@ test_no_match(void)
   expect_absent(plugin_tmp, "hpcups.so");
 }
 
+// A plugin_dir long enough that "<plugin_dir>/plugin_tmp/<link name>" no
+// longer fits the staging path buffer must be refused with ENAMETOOLONG, not
+// written past the end of that buffer.
+static void
+test_long_plugin_dir(void)
+{
+  char plugin_dir[4096];
+  char plugin_tmp[4200];
+  int rc;
+
+  snprintf(plugin_dir, sizeof(plugin_dir), "/tmp/hplip-arch-long-XXXXXX");
+  if (mkdtemp(plugin_dir) == NULL) { perror("mkdtemp"); exit(2); }
+
+  // Nest directories (each name well under NAME_MAX) until plugin_dir is
+  // 1000 bytes long: "/plugin_tmp/" still fits, the vendor name does not.
+  while (strlen(plugin_dir) < 1000)
+  {
+    size_t used = strlen(plugin_dir), add = 1000 - used;
+
+    if (add > 101)
+      add = 101;
+    plugin_dir[used] = '/';
+    memset(plugin_dir + used + 1, 'a', add - 1);
+    plugin_dir[used + add] = '\0';
+    if (mkdir(plugin_dir, 0755) != 0) { perror("mkdir"); exit(2); }
+  }
+
+  snprintf(plugin_tmp, sizeof(plugin_tmp), "%s/plugin_tmp", plugin_dir);
+  if (mkdir(plugin_tmp, 0755) != 0) { perror("mkdir"); exit(2); }
+  make_vendor_file(plugin_tmp, "hpcups-component-with-a-long-name-x86_64.so");
+
+  errno = 0;
+  rc = hplip_stage_plugin_libs(plugin_dir, "x86_64");
+  check("an over-long link path is refused with -1", rc == -1);
+  check("an over-long link path reports ENAMETOOLONG",
+        errno == ENAMETOOLONG);
+  check("nothing is staged for an over-long link path",
+        count_links(plugin_tmp) == 0);
+}
+
 int
 main(void)
 {
   test_x86_64();
   test_arm64();
   test_no_match();
+  test_long_plugin_dir();
 
   printf("\n%d checks, %d failures\n", checks, failures);
   return failures == 0 ? 0 : 1;
