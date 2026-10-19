@@ -2,6 +2,7 @@
 
 import json
 import re
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -46,7 +47,7 @@ class RenovateTests(unittest.TestCase):
         # A regex manager that matches nothing is skipped by Renovate without
         # any error, so its dependency silently stops updating.
         config = json.loads((ROOT / "renovate.json").read_text())
-        tracked = [p.relative_to(ROOT).as_posix() for p in ROOT.rglob("*") if p.is_file() and ".git" not in p.parts]
+        tracked = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
         for manager in config["customManagers"]:
             for file_pattern in manager["managerFilePatterns"]:
                 files = [f for f in tracked if re.search(file_pattern.strip("/"), f)]
