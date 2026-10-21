@@ -223,6 +223,11 @@ call (`BST_FLAGS`), which fetches sources only from the Bluefin source cache.
 dispatch (saved only when an arch fits in 9000 MB uncompressed; a larger
 cache warns and skips the save). Reset it with
 `gh cache delete --all`.
+The cache key hashes a hand-written list of build inputs that `bst-cache.yml`,
+`fsdk-ci.yml` and `registry-actions.yml` each repeat. When an element gains a
+`kind: local` source, add it to all three `hashFiles(...)` lists and to the
+`bst-cache.yml` push `paths`. `tests/test_build_inputs.py` (run by
+`just check-entrypoint`, so by every PR) fails until they agree.
 
 PRs target `main`. Pushes to `main` (each one already passed the
 merge queue's full build) are rebuilt, verified with `just verify` and
