@@ -1,10 +1,10 @@
 name: Publish signed FSDK OCI image
 
-# Pushes to testing (each one already passed the merge queue) are rebuilt,
+# Pushes to main (each one already passed the merge queue) are rebuilt,
 # verified and published. Reverting a PR is the rollback.
 on:
   push:
-    branches: [testing]
+    branches: [main]
 
 # One run at a time; a newer push replaces any run still pending, so a commit
 # superseded while a publish is in flight is never built and gets no
@@ -91,7 +91,7 @@ jobs:
       - name: Install image build dependencies
         run: sudo apt-get update && sudo apt-get install --yes fuse3 podman skopeo jq
       # Warm start as in fsdk-ci.yml: bst-cache.yml refills this cache from
-      # testing, and the printing base is seeded from its signed bundle.
+      # main, and the printing base is seeded from its signed bundle.
       - name: Compute BuildStream cache key
         id: bst-key
         env:
@@ -343,7 +343,7 @@ jobs:
              .annotations["io.projectbluefin.fsdk.version"] == $fsdk_version and
              .annotations["io.projectbluefin.fsdk.ref"] == $fsdk_ref' <<< "$raw"
       # sha-<commit> is immutable; <VERSION>, its per-arch tags and stable
-      # move to the newest verified testing commit, never to an ancestor of
+      # move to the newest verified main commit, never to an ancestor of
       # the commit :stable already carries (e.g. a re-run of an older run).
       - name: Tag the verified image
         env:
