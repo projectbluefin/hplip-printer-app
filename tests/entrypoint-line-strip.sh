@@ -4,6 +4,14 @@
 #
 # Regression test for #76:
 # - get_config_value() must not index line[-1] on blank LF or CRLF lines.
+#
+# Also pins how get_config_value() scopes a lookup, since the plugin download
+# picks its url/size/checksum from the [<hplip version>] section of HP's
+# plugin.conf and the plugin status reads [plugin] from hplip.state:
+# - only the requested section is searched, and a section whose name merely
+#   starts with the requested one ([3.26.40] for 3.26.4) does not match;
+# - a key whose name merely starts with the requested one does not match;
+# - a line without "=", an empty value, or an empty key yields NULL.
 # - hplip_run_command_line() must not strip the final character from output
 #   lacking a trailing newline, and must tolerate empty lines.
 set -euo pipefail
@@ -71,6 +79,38 @@ static void strip_cmd_output(char *buf) {
   $strip_code
 }
 
+static char *lookup(const char *text, const char *section, const char *key) {
+  FILE *fp = fmemopen((void *)text, strlen(text), "r");
+  if (!fp) exit(2);
+  char *v = get_config_value(fp, section, key);
+  fclose(fp);
+  return v;
+}
+
+static int expect(const char *text, const char *section, const char *key,
+                  const char *want) {
+  char *v = lookup(text, section, key);
+  int ok = want ? (v && !strcmp(v, want)) : (v == NULL);
+  if (!ok)
+    fprintf(stderr, "[%s] %s: expected %s, got %s\n", section ? section : "(null)",
+            key ? key : "(null)", want ? want : "NULL", v ? v : "NULL");
+  free(v);
+  return ok;
+}
+
+static const char plugin_conf[] =
+  "[3.26.3]\n"
+  "url = https://example.invalid/old.run\n"
+  "checksum = old\n"
+  "\n"
+  "[3.26.40]\n"
+  "url = https://example.invalid/prefix.run\n"
+  "\n"
+  "[3.26.4]\n"
+  "url_mirror = https://example.invalid/mirror.run\n"
+  "url = https://example.invalid/new.run\n"
+  "checksum = new\n";
+
 int main(int argc, char **argv) {
   if (argc < 2) return 1;
   const char *test = argv[1];
@@ -111,6 +151,39 @@ int main(int argc, char **argv) {
     assert(!strcmp(buf, ""));
     return 0;
   }
+  if (!strcmp(test, "config-section-scope")) {
+    int ok = 1;
+    ok &= expect(plugin_conf, "3.26.4", "url", "https://example.invalid/new.run");
+    ok &= expect(plugin_conf, "3.26.4", "checksum", "new");
+    ok &= expect(plugin_conf, "3.26.3", "url", "https://example.invalid/old.run");
+    ok &= expect(plugin_conf, "3.26.40", "url", "https://example.invalid/prefix.run");
+    ok &= expect(plugin_conf, "3.26", "url", NULL);
+    ok &= expect(plugin_conf, "3.26.5", "url", NULL);
+    ok &= expect(plugin_conf, "3.26.40", "checksum", NULL);
+    ok &= expect("[hplip]\nversion = 3.26.4\n[plugin]\ninstalled = 1\n",
+                 "plugin", "version", NULL);
+    ok &= expect("[plugin]\ninstalled = 1\n[hplip]\n", "hplip", "installed", NULL);
+    return ok ? 0 : 1;
+  }
+  if (!strcmp(test, "config-key-match")) {
+    int ok = 1;
+    ok &= expect("[plugin]\nversionx = 9\nversion = 3.26.4\n",
+                 "plugin", "version", "3.26.4");
+    ok &= expect("[plugin]\ninstalled_by = x\n", "plugin", "installed", NULL);
+    ok &= expect("[plugin]\nversion=3.26.4\n", "plugin", "version", "3.26.4");
+    ok &= expect("[plugin]\nversion \t=\t 3.26.4\n", "plugin", "version", "3.26.4");
+    ok &= expect("[HPLIP]\nVERSION = 3.26.4\n", "hplip", "version", "3.26.4");
+    return ok ? 0 : 1;
+  }
+  if (!strcmp(test, "config-no-value")) {
+    int ok = 1;
+    ok &= expect("[plugin]\nversion 3.26.4\n", "plugin", "version", NULL);
+    ok &= expect("[plugin]\nversion =\n", "plugin", "version", NULL);
+    ok &= expect("[plugin]\nversion =   \n", "plugin", "version", NULL);
+    ok &= expect("[plugin]\nversion = 1\n", "plugin", "", NULL);
+    ok &= expect("[plugin]\nversion = 1\n", "plugin", NULL, NULL);
+    return ok ? 0 : 1;
+  }
   return 3;
 }
 C_EOF
@@ -143,6 +216,9 @@ run_check() {
 
 run_check config-blank-lf "get_config_value parses sections with blank LF lines"
 run_check config-blank-crlf "get_config_value parses sections with blank CRLF lines"
+run_check config-section-scope "get_config_value only reads the requested section, never a prefix-named one"
+run_check config-key-match "get_config_value matches whole keys, ignoring spacing and case"
+run_check config-no-value "get_config_value returns NULL for a missing '=', an empty value or an empty key"
 run_check cmd-no-trailing-newline "command-output line stripper preserves lines without trailing newline"
 run_check cmd-trailing-newline "command-output line stripper removes trailing newline"
 run_check cmd-empty-line "command-output line stripper handles empty line"
