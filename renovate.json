@@ -18,12 +18,13 @@
     {
       "customType": "regex",
       "managerFilePatterns": ["/^VERSION$/"],
-      "matchStrings": ["^(?<currentValue>\\d+\\.\\d+\\.\\d+)\\n"],
+      "matchStrings": ["^(?<currentValue>\\d+\\.\\d+\\.\\d+)(?:-\\d+)?\\n"],
       "depNameTemplate": "printing-team/hplip.v2",
       "datasourceTemplate": "gitlab-tags",
       "registryUrlTemplate": "https://salsa.debian.org",
       "extractVersionTemplate": "^debian/(?<version>\\d+\\.\\d+\\.\\d+)\\+dfsg0-\\d+$",
-      "versioningTemplate": "semver"
+      "versioningTemplate": "semver",
+      "autoReplaceStringTemplate": "{{{newValue}}}\n"
     },
     {
       "customType": "regex",

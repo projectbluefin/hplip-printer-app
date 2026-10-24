@@ -728,8 +728,10 @@ TESTPAGE=/path/to/my/testpage/my_testpage.ps PPD_PATHS=/path/to/my/ppds:/my/seco
 
 `just check-entrypoint` runs the host-only entrypoint checks and
 `tests/test_renovate.py`, which preserves the Ubuntu runner compatibility
-limit in `renovate.json` and checks that a Renovate fsdk-containers ref bump
-is complete and automerged.
+limit in `renovate.json`, checks that a Renovate fsdk-containers ref bump
+is complete and automerged, checks that every Renovate custom-manager regex
+matches the files it names, and checks that `VERSION` agrees with the HPLIP
+source tag in `elements/printer-app/hplip.bst`.
 
 The proprietary plugin is downloaded while the web admin request which
 asked for it is waiting for an answer, so every plugin transfer is
