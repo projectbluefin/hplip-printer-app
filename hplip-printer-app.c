@@ -1604,7 +1604,7 @@ hplip_web_plugin(
 
     papplClientHTMLPuts(client,
 			"        <p>Some devices cannot be supported by HP's free-(open-source) software driver suite <a href=\"https://developers.hp.com/hp-linux-imaging-and-printing\">HPLIP</a> (HP Linux Imaging and Printing) but need driver extensions or firmware files which are proprietary software (binary-only, no source code published) which cannot be distributed in this Printer Application or in Linux distributions. Therefore all these pieces of proprietary software are packaged together by HP to form a single plugin package ");
-    if (getuid())
+    if (!HPLIP_CAN_INSTALL_PLUGIN)
       papplClientHTMLPuts(client,
 			  "which can be installed with HPLIP.</p>\n");
     else
@@ -1631,7 +1631,7 @@ hplip_web_plugin(
 			    "Plugin out-of-date" :
 			    "Plugin status unknown")));
 
-    if (getuid())
+    if (!HPLIP_CAN_INSTALL_PLUGIN)
     {
       if (plugin_status != HPLIP_PLUGIN_INSTALLED)
 	papplClientHTMLPuts(client,
