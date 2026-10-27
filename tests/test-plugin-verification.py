@@ -13,6 +13,10 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = "4ABA2F66DBD5A95894910E0673D770CDA59047B9"
+# Frozen ("!") so every key is stamped with exactly this time. A ticking fake
+# clock restarts in each gpg call, so a slow key generation would otherwise
+# leave the key newer than the next signature ("Time conflict").
+FAKED_TIME = "1577836800!"
 
 
 def run(*args):
@@ -38,7 +42,7 @@ class Verification(unittest.TestCase):
         cls.payload.write_text("untrusted payload must never be executed\n")
         cls.keys = []
         for name, expiry in [("valid", "0"), ("other", "0"), ("expired", "1d")]:
-            run(*cls.gpg, "--faked-system-time", "1577836800",
+            run(*cls.gpg, "--faked-system-time", FAKED_TIME,
                 "--quick-generate-key", name, "ed25519", "sign", expiry)
             listing = run(*cls.gpg, "--with-colons", "--list-keys", name)
             fingerprint = next(line.split(":")[9] for line in listing.splitlines()
@@ -46,12 +50,12 @@ class Verification(unittest.TestCase):
             key = cls.base / (name + ".asc")
             key.write_text(run(*cls.gpg, "--armor", "--export", fingerprint))
             sig = cls.base / (name + ".sig")
-            run(*cls.gpg, "--faked-system-time", "1577836800",
+            run(*cls.gpg, "--faked-system-time", FAKED_TIME,
                 "--local-user", fingerprint, "--output", str(sig),
                 "--detach-sign", str(cls.payload))
             cls.keys.append((fingerprint, key, sig))
         cls.expired_sig = cls.base / "expired-signature.sig"
-        run(*cls.gpg, "--faked-system-time", "1577836800",
+        run(*cls.gpg, "--faked-system-time", FAKED_TIME,
             "--default-sig-expire", "1d", "--local-user", cls.keys[0][0],
             "--output", str(cls.expired_sig), "--detach-sign", str(cls.payload))
 
