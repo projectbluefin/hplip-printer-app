@@ -28,6 +28,7 @@ validate:
     just check-entrypoint
 
 # Entrypoint checks that need no image build.
+# Needs PyYAML for tests/test_python_install_pins.py: pip install -r .github/requirements-ci.txt
 check-entrypoint:
     #!/usr/bin/env bash
     set -euo pipefail
