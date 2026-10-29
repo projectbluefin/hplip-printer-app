@@ -28,6 +28,7 @@ validate:
     just check-entrypoint
 
 # Entrypoint checks that need no image build.
+# Needs PyYAML for tests/test_python_install_pins.py: pip install -r .github/requirements-ci.txt
 check-entrypoint:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -42,6 +43,7 @@ check-entrypoint:
         bash "$t"
     done
     python3 -m unittest discover -s tests -p 'test_renovate.py'
+    python3 tests/test_python_install_pins.py
     python3 tests/test-plugin-page.py
 
 fetch:

@@ -80,6 +80,9 @@ just fetch
 just verify
 ```
 
+`just validate` also runs the Python unit tests in `tests/`; the install-pin
+gate needs PyYAML (`pip install -r .github/requirements-ci.txt`).
+
 `just verify` builds the actual OCI image, starts it as numeric user 65532,
 prints through PAPPL, `hpcups` and the CUPS socket backend into a TCP sink,
 then checks the PCL raster output and persisted state. It also checks HTTPS,
