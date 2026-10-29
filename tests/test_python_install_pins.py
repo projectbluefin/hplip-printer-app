@@ -156,7 +156,6 @@ def check_tree(root):
 # Pinning validate.yml (pip install -r .github/requirements-ci.txt) must delete
 # its entry below in the same commit.
 BASELINE = frozenset({
-    ".github/workflows/validate.yml:30:1: pip argument must use an exact == version: pre-commit",
 })
 
 
