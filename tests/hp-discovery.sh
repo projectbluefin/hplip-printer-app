@@ -266,6 +266,87 @@ check "multi-port device keeps its device URI" \
     'network hp:/net/OfficeJet_Pro_8600?ip=192.168.1.7&port=2 "OfficeJet Pro 8600" "OfficeJet Pro 8600 Network printer2 HPLIP" "MFG:OfficeJet;MDL:OfficeJet Pro 8600;" ""' \
     "$stdout"
 
+echo "# Without a printer name the resolved host name identifies the device"
+cat "$tmp/header" "$tmp/unnamed" > "$tmp/out"
+write_probe "$tmp/out" "-"
+cat > "$bin/host" <<'EOF'
+#!/bin/sh
+case "$1" in
+    192.168.1.6) printf '6.1.168.192.in-addr.arpa domain name pointer printer6.example.com.\n' ;;
+esac
+exit 0
+EOF
+chmod +x "$bin/host"
+run -
+check "unnamed printer is identified by its host name" \
+    'network hp:/net/LaserJet_1020?hostname=printer6.example.com "LaserJet 1020" "LaserJet 1020 Network printer6.example.com HPLIP" "MFG:LaserJet;MDL:LaserJet 1020;" ""' \
+    "$stdout"
+
+echo "# Without a printer name or resolver the IP address identifies the device"
+write_probe "$tmp/out" "-"
+run -
+check "unnamed printer is identified by its IP address" \
+    'network hp:/net/LaserJet_1020?ip=192.168.1.6 "LaserJet 1020" "LaserJet 1020 Network 192.168.1.6 HPLIP" "MFG:LaserJet;MDL:LaserJet 1020;" ""' \
+    "$stdout"
+
+echo "# A device without any identifying name is announced by its model only"
+cat > "$tmp/anonymous" <<'EOF'
+Device URI                                            Model                    Name
+----------------------------------------------------  -----------------------  ----------
+hp:/net/OfficeJet_Pro_8600?ip=192.168.1.7&port=2      OfficeJet_Pro_8600
+
+Found 1 printer(s) on the 'net' bus.
+
+Done.
+EOF
+cat "$tmp/header" "$tmp/anonymous" > "$tmp/out"
+write_probe "$tmp/out" "$tmp/resolvers"
+run -
+check "anonymous device is announced by its model only" \
+    'network hp:/net/OfficeJet_Pro_8600?ip=192.168.1.7&port=2 "OfficeJet Pro 8600" "OfficeJet Pro 8600 HPLIP" "MFG:OfficeJet;MDL:OfficeJet Pro 8600;" ""' \
+    "$stdout"
+
+echo "# A full manufacturer name is kept whole in the device ID"
+cat > "$tmp/fullmfg" <<'EOF'
+Device URI                                            Model                              Name
+----------------------------------------------------  ---------------------------------  ----------
+hp:/net/LaserJet_4000?ip=192.168.1.5                  Hewlett-Packard_LaserJet_4000      printer1
+hp:/net/DeskJet_990C?ip=192.168.1.6                   Hewlett_Packard_DeskJet_990C       printer6
+
+Found 2 printer(s) on the 'net' bus.
+
+Done.
+EOF
+cat "$tmp/header" "$tmp/fullmfg" > "$tmp/out"
+write_probe "$tmp/out" "$tmp/resolvers"
+run -
+check "full manufacturer names are kept whole" \
+    'network hp:/net/LaserJet_4000?zc=printer1 "Hewlett-Packard LaserJet 4000" "Hewlett-Packard LaserJet 4000 Network printer1 HPLIP" "MFG:Hewlett-Packard;MDL:Hewlett-Packard LaserJet 4000;" ""
+network hp:/net/DeskJet_990C?zc=printer6 "Hewlett Packard DeskJet 990C" "Hewlett Packard DeskJet 990C Network printer6 HPLIP" "MFG:Hewlett Packard;MDL:Hewlett Packard DeskJet 990C;" ""' \
+    "$stdout"
+
+echo "# A device without a model name is skipped with a warning"
+cat > "$tmp/nomodel" <<'EOF'
+Device URI                                            Model                    Name
+----------------------------------------------------  -----------------------  ----------
+hp:/net/Unknown?ip=192.168.1.10
+hp:/net/OfficeJet_Pro_8600?ip=192.168.1.5             OfficeJet_Pro_8600       printer1
+
+Found 2 printer(s) on the 'net' bus.
+
+Done.
+EOF
+cat "$tmp/header" "$tmp/nomodel" > "$tmp/out"
+write_probe "$tmp/out" "$tmp/resolvers"
+run -
+check "device without model name does not fail discovery" "0" "$status"
+check "device without model name is not announced" \
+    'network hp:/net/OfficeJet_Pro_8600?zc=printer1 "OfficeJet Pro 8600" "OfficeJet Pro 8600 Network printer1 HPLIP" "MFG:OfficeJet;MDL:OfficeJet Pro 8600;" ""' \
+    "$stdout"
+check "device without model name is warned about" \
+    'WARNING: "hp-probe" reported a printer without model name, device URI "hp:/net/Unknown?ip=192.168.1.10" ignored' \
+    "$stderr"
+
 echo "# A device answering twice is announced only once"
 cat "$tmp/header" "$tmp/named" "$tmp/named" > "$tmp/out"
 write_probe "$tmp/out" "$tmp/resolvers"
