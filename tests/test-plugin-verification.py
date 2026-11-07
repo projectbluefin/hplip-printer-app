@@ -12,7 +12,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PIN = "4ABA2F66DBD5A95894910E0673D770CDA59047B9"
+PIN = os.environ.get("HP_SIGNING_FINGERPRINT", "4ABA2F66DBD5A95894910E0673D770CDA59047B9")
 # Frozen ("!") so every key is stamped with exactly this time. A ticking fake
 # clock restarts in each gpg call, so a slow key generation would otherwise
 # leave the key newer than the next signature ("Time conflict").

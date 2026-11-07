@@ -77,8 +77,8 @@ podman exec "$name" /usr/bin/bash -c '
   gnupg=/var/lib/hplip-printer-app/plugin-gnupg-smoke
   mkdir -m 0700 "$gnupg"
   gpg --no-options --batch --no-tty --no-autostart --homedir "$gnupg" --status-fd 1 \
-    --import -- /usr/share/hplip/signing-key.asc |
-    grep "^\[GNUPG:\] IMPORT_OK [0-9]* 4ABA2F66DBD5A95894910E0673D770CDA59047B9" >/dev/null
+    --import -- /usr/share/hplip-printer-app/hplip-plugin-signing-key-2025.asc |
+    grep "^\[GNUPG:\] IMPORT_OK [0-9]* 82FFA7C6AA7411D934BDE173AC69536A2CF3A243" >/dev/null
   rm -rf "$gnupg"
   test -s /var/lib/hplip-printer-app/usb/org.cups.usb-quirks
 '

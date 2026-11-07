@@ -50,8 +50,8 @@ environment-nocache:
 
 config:
   build-commands:
-    - make -j"${MAXJOBS}" VERSION="$(cat VERSION)" HPLIP_OCI=1 HPLIP_PLUGIN_STATE_DIR=/var/lib/hplip-printer-app HPLIP_PLUGIN_ALT_DIR=/var/lib/hplip-printer-app LDFLAGS="$LDFLAGS -ljpeg"
+    - make -j"${MAXJOBS}" VERSION="$(cat VERSION)" HPLIP_OCI=1 HPLIP_PLUGIN_STATE_DIR=/var/lib/hplip-printer-app HPLIP_PLUGIN_ALT_DIR=/var/lib/hplip-printer-app HPLIP_SIGNING_KEY=/usr/share/hplip-printer-app/hplip-plugin-signing-key-2025.asc HPLIP_SIGNING_FINGERPRINT=82FFA7C6AA7411D934BDE173AC69536A2CF3A243 LDFLAGS="$LDFLAGS -ljpeg"
     - gs -q -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=testpage.pdf testpage.ps
   install-commands:
-    - make DESTDIR="%{install-root}" VERSION="$(cat VERSION)" HPLIP_OCI=1 HPLIP_PLUGIN_STATE_DIR=/var/lib/hplip-printer-app HPLIP_PLUGIN_ALT_DIR=/var/lib/hplip-printer-app LDFLAGS="$LDFLAGS -ljpeg" unitdir= install
+    - make DESTDIR="%{install-root}" VERSION="$(cat VERSION)" HPLIP_OCI=1 HPLIP_PLUGIN_STATE_DIR=/var/lib/hplip-printer-app HPLIP_PLUGIN_ALT_DIR=/var/lib/hplip-printer-app HPLIP_SIGNING_KEY=/usr/share/hplip-printer-app/hplip-plugin-signing-key-2025.asc HPLIP_SIGNING_FINGERPRINT=82FFA7C6AA7411D934BDE173AC69536A2CF3A243 LDFLAGS="$LDFLAGS -ljpeg" unitdir= install
     - install -D -m 0644 testpage.pdf "%{install-root}/usr/share/hplip-printer-app/testpage.pdf"

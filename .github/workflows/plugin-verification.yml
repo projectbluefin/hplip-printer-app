@@ -26,12 +26,12 @@ jobs:
           fixtures=/tmp/hp-verify/fixtures
           install -d -m 0755 /tmp/hp-verify "$fixtures" /tmp/hp-verify/src
           cp -r tests hplip-plugin-verify.c hplip-plugin-verify.h /tmp/hp-verify/src/
-          curl --fail --location --proto '=https' --proto-redir '=https' --retry 3 \
-            https://salsa.debian.org/printing-team/hplip.v2/-/raw/f27f786d5f1060cce7c92e42488bd5e5d00ba135/debian/upstream/signing-key.asc \
-            -o "$fixtures/signing-key.asc"
+          # The key the OCI image ships; HP signs 3.25.6 and later with it.
+          cp files/hplip-plugin-signing-key-2025.asc "$fixtures/signing-key.asc"
+          # Must match HPLIP's version in elements/printer-app/hplip.bst.
           for suffix in run run.asc; do
             curl --fail --location --proto '=https' --proto-redir '=https' --retry 3 \
-              "https://www.openprinting.org/download/printdriver/auxfiles/HP/plugins/hplip-3.22.10-plugin.$suffix" \
+              "https://www.openprinting.org/download/printdriver/auxfiles/HP/plugins/hplip-3.26.4-plugin.$suffix" \
               -o "$fixtures/plugin.$suffix"
           done
           chmod -R a+rX /tmp/hp-verify
@@ -46,6 +46,7 @@ jobs:
             env HP_PLUGIN="$fixtures/plugin.run" \
               HP_PLUGIN_SIGNATURE="$fixtures/plugin.run.asc" \
               HP_SIGNING_KEY="$fixtures/signing-key.asc" \
+              HP_SIGNING_FINGERPRINT=82FFA7C6AA7411D934BDE173AC69536A2CF3A243 \
               python3 /tmp/hp-verify/src/tests/test-plugin-verification.py
       - name: Remove proprietary test bytes
         if: always()

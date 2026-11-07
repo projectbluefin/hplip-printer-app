@@ -795,7 +795,9 @@ the files "LICENSE" and "NOTICE" for more information.
 ### HP plugin signature verification
 
 Plugin downloads are verified before the self-extracting archive is executed.
-The verifier imports the packaged `/usr/share/hplip/signing-key.asc` into
+The verifier imports the packaged HP signing key (`HPLIP_SIGNING_KEY`; the OCI
+image ships `/usr/share/hplip-printer-app/hplip-plugin-signing-key-2025.asc`,
+the Snap uses Debian's `/usr/share/hplip/signing-key.asc`) into
 `$STATE_DIR/plugin-gnupg` (default `/var/lib/hplip-printer-app/plugin-gnupg`).
 This directory must belong to the application's runtime UID and have mode
 0700. Its parent must already exist and be writable by that UID on the
@@ -803,12 +805,17 @@ persistent state volume. No root privileges or install-time keyserver access
 are needed for verification. Snap uses its existing persistent `STATE_DIR`
 and the key inside the Snap.
 
-The OCI image and the Rock and Snap recipes already install Debian HPLIP's
-public key. Native
-packagers must also supply it; `HPLIP_SIGNING_KEY` and `HPLIP_APP_STATE_DIR` are
-Makefile overrides for nonstandard paths. The currently pinned primary
-fingerprint is `4ABA2F66DBD5A95894910E0673D770CDA59047B9`, as documented in
-[upstream's plugin verifier](https://github.com/OpenPrinting/hplip-printer-app/blob/master/hplip-printer-app.c).
+HP signed plugins up to HPLIP 3.25.2 with the 2009 key
+`4ABA2F66DBD5A95894910E0673D770CDA59047B9`, which Debian ships as
+`/usr/share/hplip/signing-key.asc`, and signs 3.25.6 and later with
+`82FFA7C6AA7411D934BDE173AC69536A2CF3A243`, the key upstream HPLIP 3.26.4's
+`base/validation.py` names. The Rock and Snap recipes (HPLIP 3.22.10) use
+Debian's key and the Makefile default pin. The OCI image (HPLIP 3.26.4) ships
+the newer key as
+`/usr/share/hplip-printer-app/hplip-plugin-signing-key-2025.asc` and pins its
+fingerprint. Native packagers must supply the key matching their HPLIP;
+`HPLIP_SIGNING_KEY`, `HPLIP_SIGNING_FINGERPRINT` and `HPLIP_APP_STATE_DIR` are
+Makefile overrides.
 An unrelated key in the persistent keyring cannot authorize a plugin. Missing
 keys, changed payloads/signatures, expired or revoked signatures/keys, and GPG
 errors fail closed before extraction and installation. User GPG configuration
@@ -825,9 +832,10 @@ python3 tests/test-plugin-verification.py
 To include official bytes already downloaded from HP's OpenPrinting mirror:
 
 ```sh
-HP_PLUGIN=/path/to/hplip-3.22.10-plugin.run \
-HP_PLUGIN_SIGNATURE=/path/to/hplip-3.22.10-plugin.run.asc \
-HP_SIGNING_KEY=/usr/share/hplip/signing-key.asc \
+HP_PLUGIN=/path/to/hplip-3.26.4-plugin.run \
+HP_PLUGIN_SIGNATURE=/path/to/hplip-3.26.4-plugin.run.asc \
+HP_SIGNING_KEY=files/hplip-plugin-signing-key-2025.asc \
+HP_SIGNING_FINGERPRINT=82FFA7C6AA7411D934BDE173AC69536A2CF3A243 \
 python3 tests/test-plugin-verification.py
 ```
 

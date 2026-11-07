@@ -90,6 +90,10 @@
 // does not lose a working installation. See
 // "scripts/hplip-plugin-state.sh" for what it does and why.
 
+#ifndef HPLIP_SIGNING_FINGERPRINT
+#  define HPLIP_SIGNING_FINGERPRINT "4ABA2F66DBD5A95894910E0673D770CDA59047B9"
+#endif
+
 #ifndef HPLIP_PLUGIN_STATE_SCRIPT
 #  define HPLIP_PLUGIN_STATE_SCRIPT "/usr/share/hplip-printer-app/hplip-plugin-state.sh"
 #endif
@@ -702,7 +706,9 @@ hplip_download_plugin(pappl_system_t *system,
   int fd;
   int bytes;
   SHA_CTX ctx;
-  unsigned char hash[SHA_DIGEST_LENGTH];
+  SHA256_CTX ctx256;
+  unsigned char hash[SHA256_DIGEST_LENGTH];
+  int hash_len;
   int status;
   const char *state_dir;
 
@@ -858,20 +864,45 @@ hplip_download_plugin(pappl_system_t *system,
     papplLog(system, PAPPL_LOGLEVEL_DEBUG,
 	     "Downloaded file size OK (%ld).", st.st_size);
 
-  // Verify sha1sum of the plugin file against the checksum from the index file
-  SHA1_Init(&ctx);
+  // Verify the plugin file against the checksum from the index file. HP's
+  // index carries SHA-1 digests (40 hex digits) up to HPLIP 3.24.4 and
+  // SHA-256 digests (64 hex digits) from HPLIP 3.25.2 on, matching HPLIP's
+  // own installer/pluginhandler.py, so pick the algorithm by digest length.
+  if (strlen(checksum) == 2 * SHA256_DIGEST_LENGTH)
+    hash_len = SHA256_DIGEST_LENGTH;
+  else if (strlen(checksum) == 2 * SHA_DIGEST_LENGTH)
+    hash_len = SHA_DIGEST_LENGTH;
+  else
+  {
+    papplLog(system, PAPPL_LOGLEVEL_ERROR,
+	     "Checksum of the plugin index (%s) is neither a SHA-1 nor a SHA-256 digest.",
+	     checksum);
+    goto out;
+  }
+  if (hash_len == SHA256_DIGEST_LENGTH)
+    SHA256_Init(&ctx256);
+  else
+    SHA1_Init(&ctx);
   fd = open(plugin_file, O_RDONLY);
   if (fd < 0)
     goto out;
   while ((bytes = read(fd, buf, sizeof(buf))) > 0)
-    SHA1_Update(&ctx, buf, bytes);
+  {
+    if (hash_len == SHA256_DIGEST_LENGTH)
+      SHA256_Update(&ctx256, buf, bytes);
+    else
+      SHA1_Update(&ctx, buf, bytes);
+  }
   close(fd);
   if (bytes < 0)
     goto out;
-  SHA1_Final(hash, &ctx);
-  for (i = 0; i < SHA_DIGEST_LENGTH; i ++)
+  if (hash_len == SHA256_DIGEST_LENGTH)
+    SHA256_Final(hash, &ctx256);
+  else
+    SHA1_Final(hash, &ctx);
+  for (i = 0; i < hash_len; i ++)
     snprintf(buf + 2 * i, 3, "%.2x", hash[i]);
-  buf[2 * SHA_DIGEST_LENGTH] = '\0';
+  buf[2 * hash_len] = '\0';
   if (strcasecmp(buf, checksum))
   {
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
@@ -890,7 +921,7 @@ hplip_download_plugin(pappl_system_t *system,
     state_dir = HPLIP_APP_STATE_DIR;
   if (snprintf(buf, sizeof(buf), "%s/plugin-gnupg", state_dir) >= sizeof(buf) ||
       !hplip_verify_plugin(buf, HPLIP_SIGNING_KEY,
-                           "4ABA2F66DBD5A95894910E0673D770CDA59047B9",
+                           HPLIP_SIGNING_FINGERPRINT,
                            signature_file, plugin_file))
   {
     papplLog(system, PAPPL_LOGLEVEL_ERROR,
