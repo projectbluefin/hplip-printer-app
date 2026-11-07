@@ -68,6 +68,7 @@ verify:
     tests/oci-appliance.sh
     tests/coexistence.sh
     just check-no-devel
+    just check-slim-paths
     just check-no-remote-login-records
 
 # Avahi's sample ssh/sftp-ssh records must not ship in an appliance that
@@ -101,6 +102,33 @@ check-no-devel:
           -o -type d -name pkgconfig -o -type d -name cmake \) -print -quit)"
     [ -z "${bad}" ] || { echo "devel content in ${IMAGE}: ${bad}" >&2; exit 1; }
     echo "OK: no devel content in ${IMAGE}"
+
+# Recheck the pinned shared recipe and this application's removals in the
+# exported image, including dangling symlinks and literal paths.
+check-slim-paths:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    IMAGE="{{ image_ref }}"
+    root="$(mktemp -d)"
+    patterns="$(mktemp)"
+    ctr=""
+    trap 'if [ -n "${ctr}" ]; then podman rm -f "${ctr}" >/dev/null; fi; chmod -R u+w "${root}"; rm -rf "${root}"; rm -f "${patterns}"' EXIT
+    just bst show --deps none --format '%{vars}' oci/hplip-printer-app.bst |
+        python3 -c 'import sys, yaml; v = yaml.safe_load(sys.stdin); print(v["slim-printing-forbidden-paths"]); print(v["app-forbidden-paths"])' > "${patterns}"
+    ctr="$(podman create "${IMAGE}" /none)"
+    podman export "${ctr}" | tar -C "${root}" -xf -
+    shopt -s nullglob globstar
+    bad=0
+    while IFS= read -r pattern; do
+        [ -n "${pattern}" ] || continue
+        for match in "${root}"/${pattern}; do
+            [ -e "${match}" ] || [ -L "${match}" ] || continue
+            echo "forbidden path in ${IMAGE}: ${match#"${root}"}" >&2
+            bad=1
+        done
+    done < "${patterns}"
+    [ "${bad}" -eq 0 ]
+    echo "OK: no forbidden slim paths in ${IMAGE}"
 
 sbom:
     #!/usr/bin/env bash

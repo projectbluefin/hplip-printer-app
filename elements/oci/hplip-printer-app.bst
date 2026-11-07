@@ -12,8 +12,20 @@ build-depends:
     config:
       location: /layer
 
+variables:
+  (@):
+    - fsdk-containers.bst:include/slim-printing.yml
+  app-forbidden-paths: |
+    etc/avahi/services/ssh.service
+    etc/avahi/services/sftp-ssh.service
+    usr/share/cups/ipptool
+    usr/bin/cupsd
+    usr/bin/ippeveprinter
+
 config:
   commands:
+    - "%{slim-printing-commands}"
+    - "%{slim-printing-gate-commands}"
     - |
       version="$(cat /metadata/VERSION)"
       install -d /layer/etc
@@ -27,8 +39,17 @@ config:
       # Keep the shared base's avahi-printing element and PAPPL's dynamic IPP publication.
       rm -f /layer/etc/avahi/services/ssh.service \
         /layer/etc/avahi/services/sftp-ssh.service
-      rm -rf /layer/usr/lib/debug /layer/usr/share/cups/ipptool
+      rm -rf /layer/usr/share/cups/ipptool
       rm -f /layer/usr/bin/cupsd /layer/usr/bin/ippeveprinter
+      while IFS= read -r path; do
+        [ -n "$path" ] || continue
+        if [ -e "/layer/$path" ] || [ -L "/layer/$path" ]; then
+          echo "forbidden app path present: /$path" >&2
+          exit 1
+        fi
+      done <<'FORBIDDEN'
+      %{app-forbidden-paths}
+      FORBIDDEN
       chmod 0777 /layer/run
       install -d -m 1777 /layer/tmp
       install -d -m 0777 /layer/var/lib/hplip-printer-app /layer/var/lib/hplip-printer-app/ppd

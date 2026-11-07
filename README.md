@@ -87,8 +87,11 @@ gate needs PyYAML (`pip install -r .github/requirements-ci.txt`).
 prints through PAPPL, `hpcups` and the CUPS socket backend into a TCP sink,
 then checks the PCL raster output and persisted state. It also checks HTTPS,
 supervised D-Bus/Avahi shutdown, required-child failure, and that the image
-carries no devel content (`just check-no-devel`). The service uses port 18030
-by default; assign a different unprivileged `PORT` for each simultaneously
+carries no devel content (`just check-no-devel`). It also checks the exported
+image against the pinned shared cleanup recipe and the appliance's own
+forbidden paths (`just check-slim-paths`). Bash, Python, and ordinary Python
+bytecode remain available for printing. The service uses port 18030 by
+default; assign a different unprivileged `PORT` for each simultaneously
 running printer family.
 
 For a rootless deployment, dedicate a volume to **this** application:
