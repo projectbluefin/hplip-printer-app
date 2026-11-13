@@ -28,7 +28,7 @@ INSTALL = re.compile(
 )
 FLAGS = {"-q", "--quiet", "-U", "--upgrade", "--user", "--no-deps",
          "--no-cache-dir", "--require-hashes", "--break-system-packages",
-         "--disable-pip-version-check", "--no-input"}
+         "--disable-pip-version-check", "--no-input", "--only-binary=:all:"}
 
 
 def logical_lines(text):
@@ -177,6 +177,7 @@ class PythonInstallPinTests(unittest.TestCase):
                 "pip install -rrequirements.txt",
                 "pip install pyyaml==6.0.3 2>/dev/null || true",
                 "pip install --quiet git+https://example.com/pkg.git@" + "0" * 40,
+                "pip install --require-hashes --only-binary=:all: -r requirements.txt",
                 "# pip install unpinned",
                 "echo 'pip install unpinned'",
             ):
