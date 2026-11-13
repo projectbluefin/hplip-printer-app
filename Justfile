@@ -46,11 +46,19 @@ check-entrypoint:
     python3 tests/test_python_install_pins.py
     python3 tests/test_entrypoint_common.py
     python3 tests/test-plugin-page.py
+    bash tests/runtime-parent.sh
 
 fetch:
     just bst source fetch --ignore-project-source-remotes --source-remote https://cache.projectbluefin.io:11001 --deps all oci/hplip-printer-app.bst
 
+# Resolve the shared printing runtime layer for the pinned junction, verify
+# its signature and stage that same digest as the OCI parent. Needs cosign,
+# skopeo and jq on the host.
+prepare-parent:
+    bash scripts/fetch-runtime-parent.sh
+
 build:
+    just prepare-parent
     just bst build oci/hplip-printer-app.bst
     just export
 
@@ -60,17 +68,29 @@ export:
     rm -rf .build-out
     just bst artifact checkout oci/hplip-printer-app.bst --directory /src/.build-out
     image_id="$(podman pull -q oci:.build-out)"
-    rm -rf .build-out
+    # Keep .build-out: releases publish this layout directly, since container
+    # storage may recompress layer 0 and break the shared digest.
     podman tag "$image_id" "{{ image_ref }}"
 
 verify:
     just validate
     just build
+    just check-shared-layer
     tests/oci-appliance.sh
     tests/coexistence.sh
     just check-no-devel
     just check-slim-paths
     just check-no-remote-login-records
+
+# Layer 0 of the built image must be the shared runtime layer, byte for byte,
+# so families pinned to the same fsdk-containers ref share one download.
+check-shared-layer layout=".build-out":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    parent="$(skopeo inspect --raw oci:runtime-parent:layer | jq -r '.layers[0].digest')"
+    child="$(skopeo inspect --raw "oci:{{ layout }}" | jq -r '.layers[0].digest')"
+    echo "parent=${parent} child=${child}"
+    [[ "${parent}" == sha256:* && "${parent}" == "${child}" ]]
 
 # Avahi's sample ssh/sftp-ssh records must not ship in an appliance that
 # serves neither. Image-level, so `just verify` catches a reintroduction

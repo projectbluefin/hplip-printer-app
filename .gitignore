@@ -8,3 +8,7 @@
 
 # Python bytecode from compiling the test server
 __pycache__/
+
+# Verified shared runtime parent, fetched by `just prepare-parent`
+runtime-parent/*
+!runtime-parent/.gitkeep

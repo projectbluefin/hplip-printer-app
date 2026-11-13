@@ -62,7 +62,21 @@ It builds the Debian-patched HPLIP print drivers (`hpcups`, `hpps`, `hp`, `HP`,
 junction (`elements/fsdk-containers.bst`). The base is the one patched CUPS,
 cups-filters, Ghostscript, Avahi and PAPPL stack for all printer
 applications, and FSDK is reached only through it; the image does not start
-`cupsd`. The final image composes runtime domains only. This appliance is
+`cupsd`. The final image composes runtime domains only.
+
+The image's first layer is fsdk-containers' shared printing runtime layer
+(`ghcr.io/projectbluefin/printing-runtime-layer`), so a host that runs
+several printer families pinned to the same fsdk-containers ref downloads that
+software once. `just build` runs `just prepare-parent`
+(`scripts/fetch-runtime-parent.sh`): it resolves the `<arch>-<full-key>` tag of
+`fsdk-containers.bst:oci/printing-runtime-layer.bst`, verifies that digest with
+cosign against fsdk-containers' `printing-runtime-layer.yml` on `main`, and
+copies the same digest into `runtime-parent/` as the OCI parent. This needs
+`cosign`, `skopeo` and `jq` on the host. The OCI element still takes the full
+final rootfs as its layer; `build-oci` (in `gzip` mode) copies the parent layer
+byte for byte and stores only the differences above it. `just verify` checks
+that layer 0 of the built image has the parent's digest
+(`just check-shared-layer`). This appliance is
 **print-only**. A socket-sink print job is not evidence of scanning, firmware
 upload to real hardware or paper output.
 
@@ -247,14 +261,22 @@ version, local Net-SNMP pin, SHA-pinned GitHub Actions and the
 fsdk-containers junction (`elements/fsdk-containers.bst`, tracking `main`).
 Junction bumps automerge once required checks pass. The FSDK image labels
 (`io.projectbluefin.fsdk.version`/`.ref`) are derived from the pinned junction
-at publish time, so a bare ref bump is a complete update. Whatever lands on
+at publish time. A bare ref bump is complete unless fsdk-containers' own FSDK
+release changes: then update
+`junction-files/fsdk-containers/include/fsdk-version.yml` to the value its
+`just bst` wrapper generates, or the shared runtime layer's key will not
+resolve and `just prepare-parent` fails. fsdk-containers keeps that include
+gitignored, so it is staged into the junction here. Whatever lands on
 fsdk-containers `main` is therefore signed and tagged `stable` here after only
 the merge queue build and `just verify`, so that branch's protection is part of
 this image's supply chain.
 
 The publish workflow pushes, signs (index and both architecture manifests),
 attests and verifies everything by digest, and tags only after every check
-passes, so a failed publish leaves no tagged, unsigned image.
+passes, so a failed publish leaves no tagged, unsigned image. It stamps the
+release labels into the built OCI layout's configuration with `umoci` and
+pushes that layout with `skopeo copy --preserve-digests`, never through
+container storage, which may recompress the shared layer 0.
 
 ### Properties
 
