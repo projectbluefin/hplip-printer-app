@@ -1,0 +1,3996 @@
+# Supported Printers: HPLIP Printer Application
+
+## Supported printers
+
+This list describes **printing support declared by the shipped drivers**, not
+hardware-tested compatibility. It includes PPD model/series labels and the
+selectable product aliases exposed by the application: **3,875 searchable names**,
+not 3,875 distinct physical printer designs. A series label does not enumerate
+every regional or hardware suffix. Names retain the driver's spelling. Scanning
+and fax are not provided by this appliance.
+
+### Source and scope
+
+The BuildStream recipe [`elements/printer-app/hplip.bst`](elements/printer-app/hplip.bst)
+pins Debian HPLIP **3.26.4+dfsg0-3**, commit
+[`f27f786d5f1060cce7c92e42488bd5e5d00ba135`](https://salsa.debian.org/printing-team/hplip.v2/-/tree/f27f786d5f1060cce7c92e42488bd5e5d00ba135).
+It regenerates the `hpcups` PPDs with `dat2drv.py`, installs them along with the
+PostScript PPDs, and explicitly copies `prnt/ps/*.ppd.gz` into
+`/usr/share/ppd/hplip/HP`. HPIJS, class drivers, scanning and fax are disabled.
+This inventory was extracted from the released BuildStream image
+`ghcr.io/projectbluefin/hplip-printer-app:3.26.4-1`, linux/amd64 manifest
+`sha256:e776c8003d31f1d72b26a3a315c3950e7400cbeb85999b83cd27cfdb7b91f0a4`.
+
+The image contains **1,403 HPLIP PPDs**, but installed does not automatically mean
+selectable. The non-Snap configuration in
+[`hplip-printer-app.c`](hplip-printer-app.c) enables
+`PR_COPTIONS_USE_ONLY_MATCHING_NICKNAMES`: only nicknames matching its `hpcups`
+version or case-insensitive PostScript expression are accepted. That leaves
+**1,391 PPDs: 883 hpcups and 508 PostScript**. Twelve HP PPDs whose nicknames only
+say `PS3`, and six unrelated PPDs inherited from cups-filters, do not match and
+are excluded from the list. The names below combine accepted PPD `*ModelName`
+labels with the product aliases returned by `hplip-printer-app drivers`, removing
+only driver/language annotations and case-insensitive duplicates. They are not
+an unfiltered copy of upstream `models.dat` or a claim about every HP printer.
+
+### Proprietary plugin and hardware limits
+
+**[plugin]** means at least one driver variant for that name declares
+`requires proprietary plugin` in its shipped PPD (113 names below). Another
+variant may work without it; for example, the Deskjet 5100 and 5800 entries have
+both marked and unmarked driver variants. The plugin and its firmware are
+**not bundled**. A plugin-dependent variant requires HP's matching-version,
+architecture-compatible proprietary download, license acceptance and successful
+installation through `/plugin` before it can work. Availability depends on HP;
+the application refuses a plugin bundle without libraries for its architecture.
+An unmarked name is not a hardware test result or a guarantee about optional
+features. USB permissions, transport support, discovery, real firmware upload
+and paper output still require validation with the actual printer.
+
+
+## Table of Contents
+
+- [Source and scope](#source-and-scope)
+- [Proprietary plugin and hardware limits](#proprietary-plugin-and-hardware-limits)
+- [Generic HP PostScript classes](#generic-hp-postscript-classes)
+- [Model and series directory](#model-and-series-names-including-selectable-product-aliases)
+  - [Apollo](#apollo)
+  - [HP Business Inkjet](#hp-business-inkjet)
+  - [HP Color LaserJet](#hp-color-laserjet)
+  - [HP DesignJet](#hp-designjet)
+  - [HP DeskJet](#hp-deskjet)
+  - [HP ENVY](#hp-envy)
+  - [HP LaserJet](#hp-laserjet)
+  - [HP OfficeJet](#hp-officejet)
+  - [HP PageWide](#hp-pagewide)
+  - [HP Photosmart](#hp-photosmart)
+  - [HP PSC](#hp-psc)
+  - [Other HP printers](#other-hp-printers)
+
+### Generic HP PostScript classes
+
+The following three shipped PPD labels also pass the filter:
+
+- HP POSTSCRIPT INKJET DEVICES
+- HP POSTSCRIPT LASERJET DEVICES
+- HP POSTSCRIPT LASERJET PRO DEVICES
+
+These are generic classes for compatible HP PostScript devices, not three
+specific printer models or an exhaustive finite hardware list. They do not make
+non-PostScript HP printers compatible. The application's automatic generic
+fallback is disabled with `PR_COPTIONS_NO_GENERIC_DRIVER`; these are explicit
+HP PPD entries. They are separate from the 3,875 names below.
+
+
+### Model and series names, including selectable product aliases
+
+#### Apollo
+
+- Apollo 2100
+- Apollo 2150
+- Apollo 2200
+- Apollo 2500
+- Apollo 2600
+- Apollo 2650
+- Apollo p2000-u
+- Apollo p2250
+
+#### HP Business Inkjet
+
+- HP Business Inkjet 1000
+- HP Business Inkjet 1100
+- HP Business Inkjet 1100 Printer
+- HP Business Inkjet 1100d Printer
+- HP Business Inkjet 1100dtn Printer
+- HP Business Inkjet 1200
+- HP Business Inkjet 1200 Printer
+- HP Business Inkjet 1200d Printer
+- HP Business Inkjet 1200dn Printer
+- HP Business Inkjet 1200dtn Printer
+- HP Business Inkjet 1200dtwn Printer
+- HP Business Inkjet 2200
+- HP Business Inkjet 2200 Printer
+- HP Business Inkjet 2200se Printer
+- HP Business Inkjet 2200xi Printer
+- HP Business Inkjet 2230
+- HP Business Inkjet 2250
+- HP Business Inkjet 2250 Printer
+- HP Business Inkjet 2250 PS
+- HP Business Inkjet 2250tn Printer
+- HP Business Inkjet 2280
+- HP Business Inkjet 2280 Printer
+- HP Business Inkjet 2280 PS
+- HP Business Inkjet 2280tn Printer
+- HP Business Inkjet 2300
+- HP Business Inkjet 2300 Printer
+- HP Business Inkjet 2300 PS
+- HP Business Inkjet 2300dtn Printer
+- HP Business Inkjet 2300n Printer
+- HP Business Inkjet 2600
+- HP Business Inkjet 2600 Printer
+- HP Business Inkjet 2600 PS
+- HP Business Inkjet 2600dn Printer
+- HP Business Inkjet 2800
+- HP Business Inkjet 2800 Printer
+- HP Business Inkjet 2800 PS
+- HP Business Inkjet 2800dt Printer
+- HP Business Inkjet 2800dtn Printer
+- HP Business Inkjet 3000
+- HP Business Inkjet 3000 Printer
+- HP Business Inkjet 3000 PS
+- HP Business Inkjet 3000dtn Printer
+- HP Business Inkjet 3000n Printer
+
+#### HP Color LaserJet
+
+- HP Color LaserJet
+- HP Color LaserJet 5
+- HP Color LaserJet 5/5M
+- HP Color LaserJet 5m
+- HP Color LaserJet 1600 **[plugin]**
+- HP Color LaserJet 2500
+- HP Color LaserJet 2500 Printer
+- HP Color LaserJet 2500 Series
+- HP Color LaserJet 2500l Printer
+- HP Color LaserJet 2500lse Printer
+- HP Color LaserJet 2500n Printer
+- HP Color LaserJet 2500tn Printer
+- HP color LaserJet 2550
+- HP Color LaserJet 2550 Series
+- HP Color LaserJet 2600n **[plugin]**
+- HP Color LaserJet 2605
+- HP Color LaserJet 2605dn
+- HP Color LaserJet 2605dtn
+- HP Color LaserJet 2700
+- HP Color LaserJet 2700n
+- HP color laserjet 2800
+- HP Color LaserJet 2800 Series
+- HP Color LaserJet 2820
+- HP Color LaserJet 2830
+- HP Color LaserJet 2840
+- HP Color LaserJet 3000
+- HP Color LaserJet 3000 Printer
+- HP Color LaserJet 3000dn Printer
+- HP Color LaserJet 3000dtn Printer
+- HP Color LaserJet 3000n Printer
+- HP Color LaserJet 3500 **[plugin]**
+- HP Color LaserJet 3500 Printer **[plugin]**
+- HP Color LaserJet 3500dn Printer **[plugin]**
+- HP Color LaserJet 3500dtn Printer **[plugin]**
+- HP Color LaserJet 3500n **[plugin]**
+- HP Color LaserJet 3550 **[plugin]**
+- HP Color LaserJet 3550n **[plugin]**
+- HP Color LaserJet 3600 **[plugin]**
+- HP Color LaserJet 3600 Printer **[plugin]**
+- HP Color LaserJet 3600dn Printer **[plugin]**
+- HP Color LaserJet 3600n Printer **[plugin]**
+- HP Color LaserJet 3700
+- HP Color LaserJet 3700d Printer
+- HP Color LaserJet 3700dn Printer
+- HP Color LaserJet 3700dtn Printer
+- HP Color LaserJet 3700n
+- HP Color LaserJet 3700n Printer
+- HP Color LaserJet 3800
+- HP Color LaserJet 3800 Printer
+- HP Color LaserJet 3800dn Printer
+- HP Color LaserJet 3800dtn Printer
+- HP Color LaserJet 3800n Printer
+- HP Color LaserJet 4500
+- HP Color LaserJet 4500 Printer
+- HP Color LaserJet 4500dn Printer
+- HP Color LaserJet 4500n Printer
+- HP Color LaserJet 4550
+- HP Color LaserJet 4550 Printer
+- HP Color LaserJet 4550dn Printer
+- HP Color LaserJet 4550hdn Plus Printer
+- HP Color LaserJet 4550hdn Printer
+- HP Color LaserJet 4550n Plus Printer
+- HP Color LaserJet 4550n Printer
+- HP Color LaserJet 4600
+- HP Color LaserJet 4610
+- HP Color LaserJet 4650
+- HP Color LaserJet 4650 Printer
+- HP Color LaserJet 4650dn Printer
+- HP Color LaserJet 4650dtn Printer
+- HP Color LaserJet 4650hdn Printer
+- HP Color LaserJet 4650n Printer
+- HP Color LaserJet 4700
+- HP Color LaserJet 4700 Printer
+- HP Color LaserJet 4700dn Printer
+- HP Color LaserJet 4700dtn Printer
+- HP Color LaserJet 4700n Printer
+- HP Color LaserJet 4700ph+ Printer
+- HP Color LaserJet 4730 Multifunction Printer
+- HP Color LaserJet 4730mfp
+- HP Color LaserJet 4730x Multifunction Printer
+- HP Color LaserJet 4730xm Multifunction Printer
+- HP Color LaserJet 4730xs Multifunction Printer
+- HP Color LaserJet 5500
+- HP Color LaserJet 5500 Printer
+- HP Color LaserJet 5500dn Printer
+- HP Color LaserJet 5500dtn Printer
+- HP Color LaserJet 5500hdn Printer
+- HP Color LaserJet 5500n Printer
+- HP Color LaserJet 5550
+- HP Color LaserJet 5550 Printer
+- HP Color LaserJet 5550dn Printer
+- HP Color LaserJet 5550dtn Printer
+- HP Color LaserJet 5550hdn Printer
+- HP Color LaserJet 5550n Printer
+- HP Color LaserJet 5700
+- HP Color LaserJet 6700
+- HP Color LaserJet 6701
+- HP Color LaserJet 8500
+- HP Color LaserJet 8500 Printer
+- HP Color LaserJet 8500dn Printer
+- HP Color LaserJet 8500n Printer
+- HP Color LaserJet 8550
+- HP Color LaserJet 8550 Multifunction Printer
+- HP Color LaserJet 8550 Printer
+- HP Color LaserJet 8550dn Printer
+- HP Color LaserJet 8550gn Printer
+- HP Color LaserJet 8550mfp-dlvry/unpkging
+- HP Color LaserJet 8550mn Printer
+- HP Color LaserJet 9500
+- HP Color LaserJet 9500 MFP
+- HP Color LaserJet 9500 Multifunction Printer
+- HP Color LaserJet 9500 Printer
+- HP Color LaserJet 9500gp Printer
+- HP Color LaserJet 9500hdn Printer
+- HP Color LaserJet 9500n Printer
+- HP Color LaserJet CM1015
+- HP Color LaserJet CM1017
+- HP Color LaserJet cm1312 MFP
+- HP Color LaserJet CM1312 MFP Series
+- HP Color LaserJet CM1312cb MFP
+- HP Color LaserJet CM1312ci MFP
+- HP Color LaserJet CM1312eb MFP
+- HP Color LaserJet CM1312ei MFP
+- HP Color LaserJet CM1312f MFP
+- HP Color LaserJet cm1312nfi MFP
+- HP Color LaserJet CM1312wb MFP
+- HP Color LaserJet CM1312wi MFP
+- HP Color LaserJet cm2320 MFP
+- HP Color LaserJet CM2320 MFP Series
+- HP Color LaserJet CM2320cb MFP
+- HP Color LaserJet CM2320cbb MFP
+- HP Color LaserJet CM2320ci MFP
+- HP Color LaserJet CM2320eb MFP
+- HP Color LaserJet CM2320ebb MFP
+- HP Color LaserJet CM2320ei MFP
+- HP Color LaserJet cm2320fxi MFP
+- HP Color LaserJet cm2320n MFP
+- HP Color LaserJet cm2320nf MFP
+- HP Color LaserJet CM2320wb MFP
+- HP Color LaserJet CM2320wbb MFP
+- HP Color LaserJet CM2320wi MFP
+- HP Color LaserJet cm3530 MFP
+- HP Color LaserJet cm3530 Multifunction Printer
+- HP Color LaserJet cm3530fs Multifunction Printer
+- HP Color LaserJet cm4540 MFP
+- HP Color LaserJet cm4730 MFP
+- HP Color LaserJet cm4730 Multifunction Printer
+- HP Color LaserJet cm4730f Multifunction Printer
+- HP Color LaserJet cm4730fm Multifunction Printer
+- HP Color LaserJet cm4730fsk Multifunction Printer
+- HP Color LaserJet cm6030 MFP
+- HP Color LaserJet cm6030 Multifunction Printer
+- HP Color LaserJet cm6030f Multifunction Printer
+- HP Color LaserJet CM6040 MFP
+- HP Color LaserJet cm6040 Multifunction Printer
+- HP Color LaserJet cm6040f Multifunction Printer
+- HP Color LaserJet CM6049 MFP
+- HP Color LaserJet cm6049f Multifunction Printer
+- HP Color LaserJet cp1215 **[plugin]**
+- HP Color LaserJet cp1217 **[plugin]**
+- HP Color LaserJet CP1510 Series
+- HP Color LaserJet cp1514n
+- HP Color LaserJet cp1515n
+- HP Color LaserJet cp1518ni
+- HP Color LaserJet CP2020 Series
+- HP Color LaserJet CP2024
+- HP Color LaserJet CP2024dn
+- HP Color LaserJet CP2024n
+- HP Color LaserJet cp2025
+- HP Color LaserJet cp2025dn
+- HP Color LaserJet cp2025n
+- HP Color LaserJet cp2025x
+- HP Color LaserJet CP2026
+- HP Color LaserJet CP2026dn
+- HP Color LaserJet CP2026n
+- HP Color LaserJet CP2027
+- HP Color LaserJet CP2027dn
+- HP Color LaserJet CP2027n
+- HP Color LaserJet cp3505
+- HP Color LaserJet cp3505 Printer
+- HP Color LaserJet cp3505dn Printer
+- HP Color LaserJet cp3505n Printer
+- HP Color LaserJet cp3505x Printer
+- HP Color LaserJet cp3525
+- HP Color LaserJet cp3525 Printer
+- HP Color LaserJet cp3525dn Printer
+- HP Color LaserJet cp3525n Printer
+- HP Color LaserJet cp3525x Printer
+- HP Color LaserJet cp4005
+- HP Color LaserJet cp4005 Printer
+- HP Color LaserJet cp4005dn Printer
+- HP Color LaserJet cp4005n Printer
+- HP color laserjet cp4020
+- HP Color LaserJet cp4020 Series
+- HP Color LaserJet CP4020-CP4520 Series
+- HP color laserjet cp4520
+- HP Color LaserJet cp4520 Series
+- HP Color LaserJet CP5220 Series
+- HP Color LaserJet CP5221
+- HP Color LaserJet CP5221dn
+- HP Color LaserJet CP5221n
+- HP Color LaserJet CP5223
+- HP Color LaserJet CP5223dn
+- HP Color LaserJet CP5223n
+- HP Color LaserJet cp5225
+- HP Color LaserJet cp5225dn
+- HP Color LaserJet cp5225n
+- HP Color LaserJet CP5227
+- HP Color LaserJet CP5227dn
+- HP Color LaserJet CP5227n
+- HP Color LaserJet CP5229
+- HP Color LaserJet CP5229dn
+- HP Color LaserJet CP5229n
+- HP color laserjet cp5520
+- HP Color LaserJet cp5520 Series
+- HP Color LaserJet cp6015
+- HP Color LaserJet cp6015de Printer
+- HP Color LaserJet cp6015dn Printer
+- HP Color LaserJet cp6015n Printer
+- HP Color LaserJet cp6015x Printer
+- HP Color LaserJet cp6015xh Printer
+- HP Color LaserJet E45028
+- HP Color LaserJet E55040
+- HP Color LaserJet E65050
+- HP Color LaserJet E65050 E65060
+- HP Color LaserJet E65060
+- HP Color LaserJet E65150
+- HP Color LaserJet E65150 E65160
+- HP Color LaserJet E65160
+- HP Color LaserJet E67550 E67560
+- HP Color LaserJet E67650 E67660
+- HP Color LaserJet E75245
+- HP Color LaserJet E85055
+- HP Color LaserJet Flow 5800
+- HP Color LaserJet Flow 6800
+- HP Color LaserJet Flow 8801
+- HP Color LaserJet Flow E57540
+- HP Color LaserJet Flow E67560
+- HP Color LaserJet Flow E67660
+- HP Color LaserJet Flow E77822
+- HP Color LaserJet Flow E77825
+- HP Color LaserJet Flow E77830
+- HP Color LaserJet Flow E78323
+- HP Color LaserJet Flow E78325
+- HP Color LaserJet Flow E78330
+- HP Color LaserJet Flow E78625
+- HP Color LaserJet Flow E78630
+- HP Color LaserJet Flow E78635
+- HP Color LaserJet Flow E87640
+- HP Color LaserJet Flow E87650
+- HP Color LaserJet Flow E87660
+- HP Color LaserJet Flow E87740
+- HP Color LaserJet Flow E87750
+- HP Color LaserJet Flow E87760
+- HP Color LaserJet Flow E87770
+- HP Color LaserJet Flow MFP E786
+- HP Color LaserJet Flow MFP E877
+- HP Color Laserjet Flow MFP M577
+- HP Color LaserJet Flow MFP M680
+- HP Color LaserJet flow MFP M880
+- HP Color LaserJet Flow X579
+- HP Color LaserJet Flow x580
+- HP Color LaserJet Flow X57945
+- HP Color LaserJet FlowMFP M578
+- HP Color LaserJet FlowMFP M681
+- HP Color LaserJet FlowMFP M682
+- HP Color LaserJet FlowMFP M776
+- HP Color Laserjet M452
+- HP Color LaserJet M452dn
+- HP Color LaserJet M452dw
+- HP Color LaserJet M452nw
+- HP Color LaserJet M455
+- HP Color LaserJet M552
+- HP Color LaserJet M553
+- HP Color LaserJet M554
+- HP Color LaserJet M555
+- HP Color LaserJet M651
+- HP Color LaserJet M652
+- HP Color LaserJet M652 M653
+- HP Color LaserJet M653
+- HP Color LaserJet M750
+- HP Color LaserJet M751
+- HP Color LaserJet M855
+- HP Color LaserJet M856
+- HP Color LaserJet MFP 5800
+- HP Color LaserJet MFP 6800
+- HP Color LaserJet MFP 6801
+- HP Color LaserJet MFP 8801
+- HP Color LaserJet MFP E785
+- HP Color LaserJet MFP E786
+- HP Color LaserJet MFP E877
+- HP Color LaserJet MFP E47528
+- HP Color LaserJet MFP E57540
+- HP Color LaserJet MFP E67550
+- HP Color LaserJet MFP E67650
+- HP Color LaserJet MFP E77422
+- HP Color LaserJet MFP E77428
+- HP Color LaserJet MFP E77822
+- HP Color LaserJet MFP E77825
+- HP Color LaserJet MFP E77830
+- HP Color LaserJet MFP E78223
+- HP Color LaserJet MFP E78228
+- HP Color LaserJet MFP E78323
+- HP Color LaserJet MFP E78323-25-30
+- HP Color LaserJet MFP E78325
+- HP Color LaserJet MFP E78330
+- HP Color LaserJet MFP E78523
+- HP Color LaserJet MFP E78528
+- HP Color LaserJet MFP E78625
+- HP Color LaserJet MFP E78630
+- HP Color LaserJet MFP E78635
+- HP Color LaserJet MFP E87640
+- HP Color LaserJet MFP E87650
+- HP Color LaserJet MFP E87660
+- HP Color LaserJet MFP E87740
+- HP Color LaserJet MFP E87750
+- HP Color LaserJet MFP E87760
+- HP Color LaserJet MFP E87770
+- HP Color LaserJet MFP M274n
+- HP Color LaserJet MFP M277c1
+- HP Color LaserJet MFP M277c2
+- HP Color LaserJet MFP M277c3
+- HP Color LaserJet MFP M277c4
+- HP Color LaserJet MFP M277c5
+- HP Color LaserJet MFP M277c6
+- HP Color LaserJet MFP M277c7
+- HP Color LaserJet MFP M277c8
+- HP Color LaserJet MFP M277c9
+- HP Color LaserJet MFP M277c10
+- HP Color LaserJet MFP M277dw
+- HP Color LaserJet MFP M277n
+- HP Color LaserJet MFP M476dn
+- HP Color LaserJet MFP M476dw
+- HP Color LaserJet MFP M476nw
+- HP Color LaserJet MFP M477fdn
+- HP Color LaserJet MFP M477fdw
+- HP Color LaserJet MFP M477fnw
+- HP Color LaserJet MFP M480
+- HP Color LaserJet MFP M577
+- HP Color LaserJet MFP M578
+- HP Color LaserJet MFP M680
+- HP Color LaserJet MFP M681
+- HP Color LaserJet MFP M681 M682
+- HP Color LaserJet MFP M776
+- HP Color LaserJet MFP X677
+- HP Color LaserJet MFP X67755
+- HP Color LaserJet MFP X67765
+- HP Color LaserJet MFP X77830
+- HP Color LaserJet Pro 4201
+- HP Color LaserJet Pro M252
+- HP Color LaserJet Pro M252c1
+- HP Color LaserJet Pro M252c2
+- HP Color LaserJet Pro M252c3
+- HP Color LaserJet Pro M252c4
+- HP Color LaserJet Pro M252c5
+- HP Color LaserJet Pro M252c6
+- HP Color LaserJet Pro M252c7
+- HP Color LaserJet Pro M252c8
+- HP Color LaserJet Pro M252c9
+- HP Color LaserJet Pro M252c10
+- HP Color LaserJet Pro M252dw
+- HP Color LaserJet Pro M252n
+- HP Color LaserJet Pro M452
+- HP Color LaserJet Pro M453-4
+- HP Color LaserJet Pro M478f-9f
+- HP Color LaserJet Pro M479
+- HP Color LaserJet Pro MFP m176n **[plugin]**
+- HP Color LaserJet Pro MFP m177fw
+- HP Color LaserJet Pro MFP M274
+- HP Color LaserJet Pro MFP M277
+- HP Color LaserJet Pro MFP M377
+- HP Color LaserJet Pro MFP M476
+- HP Color LaserJet Pro MFP M477
+- HP Color LaserJet Pro MFP M481
+- HP Color LaserJet X654
+- HP Color LaserJet X65455
+- HP Color LaserJet X65465
+- HP ColorLaserJet M153-M154
+- HP ColorLaserJet M155-M156
+- HP ColorLaserJet M253-M254
+- HP ColorLaserJet M255-M256
+- HP ColorLaserJet MFP M178-M181
+- HP ColorLaserJet MFP M182-M185
+- HP ColorLaserJet MFP M278-M281
+- HP ColorLaserJet MFP M282-M285
+
+#### HP DesignJet
+
+- HP Designjet 4000ps
+- HP Designjet 4000ps (42'' sized)
+- HP Designjet 4020ps
+- HP Designjet 4020ps (42'' sized)
+- HP Designjet 4500mfp
+- HP Designjet 4500mfp (42'' sized)
+- HP Designjet 4500ps
+- HP Designjet 4500ps (42'' sized)
+- HP Designjet 4520mfp
+- HP Designjet 4520mfp (42'' sized)
+- HP Designjet 4520ps
+- HP Designjet 4520ps (42'' sized)
+- HP Designjet D5800ps
+- HP Designjet D5800ps Photo
+- HP Designjet T770 PostScript
+- HP Designjet T770 PostScript (44'' sized)
+- HP Designjet T770ps 24in
+- HP Designjet T770ps 24in (24'' sized)
+- HP Designjet T790ps 24in
+- HP Designjet T790ps 24in (24'' sized)
+- HP Designjet T790ps 44in
+- HP Designjet T790ps 44in (44'' sized)
+- HP Designjet T795ps 44in
+- HP Designjet T795ps 44in (44'' sized)
+- HP Designjet T920 PostScript
+- HP Designjet T920 PostScript (36'' sized)
+- HP DesignJet T930 PostScript
+- HP DesignJet T930 PostScript (36'' sized)
+- HP Designjet T1100ps 24in
+- HP Designjet T1100ps 24in (24'' sized)
+- HP Designjet T1100ps 44in
+- HP Designjet T1100ps 44in (44'' sized)
+- HP Designjet T1120ps 24in
+- HP Designjet T1120ps 24in (24'' sized)
+- HP Designjet T1120ps 44in
+- HP Designjet T1120ps 44in (44'' sized)
+- HP Designjet T1200 PostScript
+- HP Designjet T1200 PostScript (44'' sized)
+- HP Designjet T1300 PostScript
+- HP Designjet T1300 PostScript (44'' sized)
+- HP Designjet T1500 PostScript
+- HP Designjet T1500 PostScript (36'' sized)
+- HP DesignJet T1700 PostScript
+- HP DesignJet T1700dr PostScript
+- HP DesignJet T1708 PostScript
+- HP DesignJet T1708dr PostScript
+- HP Designjet T2300 PostScript
+- HP Designjet T2300 PostScript (44'' sized)
+- HP Designjet T2500 PostScript
+- HP Designjet T2500 PostScript (36'' sized)
+- HP Designjet T3500ps
+- HP Designjet T3500ps (36'' sized)
+- HP Designjet T7100ps
+- HP Designjet T7100ps (42'' sized)
+- HP Designjet T7100ps Monochrome
+- HP Designjet T7100ps Monochrome (42'' sized)
+- HP Designjet T7200ps
+- HP Designjet T7200ps (42'' sized)
+- HP DesignJet XL 3800 MFP PS
+- HP DesignJet Z6 24in
+- HP DesignJet Z6 24in PostScript
+- HP DesignJet Z6 44in
+- HP DesignJet Z6 44in PostScript
+- HP DesignJet Z6 Pro 64in
+- HP DesignJet Z6 Pro 64in PostScript
+- HP DesignJet Z6 Pro 64in PS
+- HP DesignJet Z6dr 44in
+- HP DesignJet Z6dr 44in PostScript
+- HP DesignJet Z9 24in
+- HP DesignJet Z9 24in PostScript
+- HP DesignJet Z9 44in
+- HP DesignJet Z9 44in PostScript
+- HP DesignJet Z9 Pro 64in
+- HP DesignJet Z9 Pro 64in PostScript
+- HP DesignJet Z9 Pro 64in PS
+- HP DesignJet Z9dr 44in
+- HP DesignJet Z9dr 44in PostScript
+- HP DesignJet Z2600 PostScript
+- HP DesignJet Z2600 PostScript (24'' sized)
+- HP Designjet Z5200 PostScript
+- HP Designjet Z5200 PostScript (44'' sized)
+- HP Designjet Z5400 PostScript
+- HP Designjet Z5400 PostScript (44'' sized)
+- HP DesignJet Z5600 PostScript
+- HP DesignJet Z5600 PostScript (44'' sized)
+- HP Designjet Z6100ps 42in Photo
+- HP Designjet Z6100ps 42in Photo (42'' sized)
+- HP Designjet Z6100ps 60in Photo
+- HP Designjet Z6100ps 60in Photo (60'' sized)
+- HP Designjet Z6200ps 42in Photo
+- HP Designjet Z6200ps 42in Photo (42'' sized)
+- HP Designjet Z6200ps 60in Photo
+- HP Designjet Z6200ps 60in Photo (60'' sized)
+- HP Designjet Z6600ps
+- HP Designjet Z6600ps (60'' sized)
+- HP DesignJet Z6610ps 60in
+- HP Designjet Z6800ps Photo
+- HP Designjet Z6800ps Photo (60'' sized)
+- HP DesignJet Z6810ps 42in
+- HP DesignJet Z6810ps 60in
+
+#### HP DeskJet
+
+- HP Deskjet 350
+- HP Deskjet 350c Printer
+- HP Deskjet 350cbi Printer
+- HP Deskjet 400
+- HP Deskjet 400 Color Capable Printer
+- HP Deskjet 400 Printer
+- HP Deskjet 400l
+- HP Deskjet 450
+- HP Deskjet 450cbi Mobile Printer
+- HP Deskjet 450ci Mobile Printer
+- HP Deskjet 450wbt Mobile Printer
+- HP Deskjet 460
+- HP Deskjet 460c Mobile Printer
+- HP Deskjet 460cb Mobile Printer
+- HP Deskjet 460wbt Mobile Printer
+- HP Deskjet 460wf Mobile Printer
+- HP Deskjet 500
+- HP Deskjet 500 Printer
+- HP Deskjet 500c
+- HP Deskjet 500j Printer
+- HP Deskjet 500k Printer
+- HP Deskjet 500q Printer
+- HP Deskjet 505j
+- HP Deskjet 510
+- HP Deskjet 520
+- HP Deskjet 540
+- HP Deskjet 550c
+- HP Deskjet 600
+- HP Deskjet 600 Printer
+- HP Deskjet 600c Printer
+- HP Deskjet 600k Printer
+- HP Deskjet 610c
+- HP Deskjet 610cl
+- HP Deskjet 612c
+- HP Deskjet 630c
+- HP Deskjet 632c
+- HP Deskjet 640c
+- HP Deskjet 640c Lite Printer
+- HP Deskjet 640c Pavilion Turbo Printer
+- HP Deskjet 640c Printer
+- HP Deskjet 640u Printer
+- HP Deskjet 642c Printer
+- HP Deskjet 648c
+- HP Deskjet 656c
+- HP Deskjet 656c Printer
+- HP Deskjet 656cvr Printer
+- HP Deskjet 660
+- HP Deskjet 660c Printer
+- HP Deskjet 660cse Printer
+- HP Deskjet 660k Printer
+- HP Deskjet 670
+- HP Deskjet 670c
+- HP Deskjet 670tv
+- HP Deskjet 672c
+- HP Deskjet 680
+- HP Deskjet 682
+- HP Deskjet 690 Printer
+- HP Deskjet 690c
+- HP Deskjet 690c Plus Printer
+- HP Deskjet 690c Printer
+- HP Deskjet 692
+- HP Deskjet 692c Printer
+- HP Deskjet 692k Printer
+- HP Deskjet 693
+- HP Deskjet 694
+- HP Deskjet 695
+- HP Deskjet 695c Printer
+- HP Deskjet 695cci Printer
+- HP Deskjet 697
+- HP Deskjet 810c
+- HP Deskjet 812c
+- HP Deskjet 815c
+- HP Deskjet 816c
+- HP Deskjet 825c
+- HP Deskjet 825c Printer
+- HP Deskjet 825cvr Printer
+- HP Deskjet 830c
+- HP Deskjet 832c
+- HP Deskjet 840c
+- HP Deskjet 841c
+- HP Deskjet 842c
+- HP Deskjet 843c
+- HP Deskjet 843c Printer
+- HP Deskjet 843cxe Printer
+- HP Deskjet 845c
+- HP Deskjet 845c Printer
+- HP Deskjet 845cvr Printer
+- HP Deskjet 850c
+- HP Deskjet 850c Printer
+- HP Deskjet 850k Printer
+- HP Deskjet 855c
+- HP Deskjet 855c Printer
+- HP Deskjet 855cse Printer
+- HP Deskjet 855cxi Printer
+- HP Deskjet 870c
+- HP Deskjet 870c Printer
+- HP Deskjet 870cse Printer
+- HP Deskjet 870cxi Printer
+- HP Deskjet 870k Printer
+- HP Deskjet 880c
+- HP Deskjet 882c
+- HP Deskjet 890c
+- HP Deskjet 890c Printer
+- HP Deskjet 890cse Printer
+- HP Deskjet 895c
+- HP Deskjet 895c Printer
+- HP Deskjet 895cse Printer
+- HP Deskjet 895cxi Printer
+- HP Deskjet 916c
+- HP Deskjet 920c
+- HP Deskjet 920c Printer
+- HP Deskjet 920cvr Printer
+- HP Deskjet 920cw Printer
+- HP Deskjet 920cxi Printer
+- HP Deskjet 930c
+- HP Deskjet 930c Printer
+- HP Deskjet 930cm Printer
+- HP Deskjet 932c
+- HP Deskjet 933c
+- HP Deskjet 934c
+- HP Deskjet 935c
+- HP Deskjet 940c
+- HP Deskjet 940c Printer
+- HP Deskjet 940cvr Printer
+- HP Deskjet 940cw Printer
+- HP Deskjet 940cxi Printer
+- HP Deskjet 948c
+- HP Deskjet 950c
+- HP Deskjet 952c
+- HP Deskjet 955c
+- HP Deskjet 955c Printer
+- HP Deskjet 957c
+- HP Deskjet 959c
+- HP Deskjet 960c
+- HP Deskjet 960c Printer
+- HP Deskjet 960cse Printer
+- HP Deskjet 960cxi Printer
+- HP Deskjet 970c
+- HP Deskjet 970c Printer
+- HP Deskjet 970cse Printer
+- HP Deskjet 970cxi Printer
+- HP Deskjet 975c
+- HP Deskjet 975c Printer
+- HP Deskjet 975cse Printer
+- HP Deskjet 975cxi Printer
+- HP Deskjet 980c
+- HP Deskjet 980c Printer
+- HP Deskjet 980cxi Printer
+- HP Deskjet 990c
+- HP Deskjet 990c Printer
+- HP Deskjet 990cm Printer
+- HP Deskjet 990cse Printer
+- HP Deskjet 990cxi Printer
+- HP Deskjet 995c
+- HP Deskjet 995c Printer
+- HP Deskjet 995ck Color Inkjet Printer
+- HP Deskjet 995ck Printer
+- HP deskjet 1000 j110
+- HP Deskjet 1000 j110 Series
+- HP deskjet 1010
+- HP Deskjet 1010 Printer
+- HP Deskjet 1010 Series
+- HP Deskjet 1011 Printer
+- HP Deskjet 1012 Printer
+- HP deskjet 1050 j410
+- HP Deskjet 1050 j410 All-in-one Printer
+- HP Deskjet 1050 j410 Series
+- HP Deskjet 1051 All-in-one Printer
+- HP Deskjet 1055 All-in-one Printer -j410e
+- HP Deskjet 1056 All-in-one Printer -j410a
+- HP Deskjet 1100
+- HP deskjet 1110
+- HP Deskjet 1110 Printer
+- HP Deskjet 1110 Series
+- HP Deskjet 1111 Printer
+- HP Deskjet 1112 Printer
+- HP Deskjet 1120
+- HP Deskjet 1120c Printer
+- HP Deskjet 1120cse Printer
+- HP Deskjet 1120cxi Printer
+- HP Deskjet 1125
+- HP Deskjet 1200
+- HP Deskjet 1200 Series
+- HP Deskjet 1200c
+- HP Deskjet 1220c
+- HP Deskjet 1220c Printer
+- HP Deskjet 1220c/ps Printer
+- HP Deskjet 1220cse Printer
+- HP Deskjet 1220cxi Printer
+- HP Deskjet 1280
+- HP deskjet 1510
+- HP Deskjet 1510 All-in-one Printer
+- HP Deskjet 1510 Series
+- HP Deskjet 1511 All-in-one Printer
+- HP Deskjet 1512 All-in-one Printer
+- HP Deskjet 1513 All-in-one Printer
+- HP Deskjet 1514 All-in-one Printer
+- HP Deskjet 1600c
+- HP Deskjet 1600cm
+- HP Deskjet 1600cn
+- HP deskjet 2000 j210
+- HP Deskjet 2000 j210 Series
+- HP deskjet 2020
+- HP Deskjet 2020 Series
+- HP deskjet 2050 j510
+- HP Deskjet 2050 j510 Series
+- HP deskjet 2130
+- HP Deskjet 2130 All-in-one Printer
+- HP Deskjet 2130 Series
+- HP Deskjet 2131 All-in-one Printer
+- HP Deskjet 2132 All-in-one Printer
+- HP Deskjet 2134 All-in-one Printer
+- HP deskjet 2200
+- HP Deskjet 2200 All-in-one
+- HP Deskjet 2200 Series
+- HP deskjet 2300
+- HP Deskjet 2300 All-in-one
+- HP Deskjet 2300 Series
+- HP deskjet 2510
+- HP Deskjet 2510 All-in-one Printer
+- HP Deskjet 2510 Series
+- HP Deskjet 2511 All-in-one Printer
+- HP Deskjet 2512 All-in-one Printer
+- HP Deskjet 2514 All-in-one Printer
+- HP deskjet 2520
+- HP Deskjet 2520 Series
+- HP deskjet 2540
+- HP Deskjet 2540 All-in-one Printer
+- HP Deskjet 2540 Series
+- HP Deskjet 2541 All-in-one Printer
+- HP Deskjet 2542 All-in-one Printer
+- HP Deskjet 2543 All-in-one Printer
+- HP Deskjet 2544 All-in-one Printer
+- HP Deskjet 2545 All-in-one Printer
+- HP Deskjet 2546b All-in-one Printer
+- HP Deskjet 2546p All-in-one Printer
+- HP Deskjet 2546r All-in-one Printer
+- HP Deskjet 2549 All-in-one Printer
+- HP deskjet 2600
+- HP Deskjet 2600 Series
+- HP Deskjet 2620 All-in-one
+- HP Deskjet 2621 All-in-one
+- HP Deskjet 2622 All-in-one
+- HP Deskjet 2623 All-in-one
+- HP deskjet 2640
+- HP Deskjet 2640 Series
+- HP deskjet 2700
+- HP Deskjet 2700 All-in-one Printer
+- HP Deskjet 2700 Series
+- HP Deskjet 2800 **[plugin]**
+- HP Deskjet 2800 All-in-one Printer **[plugin]**
+- HP Deskjet 2800 Series **[plugin]**
+- HP Deskjet 2800e All-in-one Printer **[plugin]**
+- HP deskjet 2900 **[plugin]**
+- HP Deskjet 2900 All-in-one Printer **[plugin]**
+- HP Deskjet 2900 Series **[plugin]**
+- HP Deskjet 2900e All-in-one Printer **[plugin]**
+- HP deskjet 3000 j310
+- HP Deskjet 3000 j310 Series
+- HP deskjet 3050 j610
+- HP Deskjet 3050 j610 Series
+- HP deskjet 3050a j611
+- HP Deskjet 3050a j611 Series
+- HP Deskjet 3051a E-all-in-one Printer j611h
+- HP Deskjet 3052a E-all-in-one Printer j611e
+- HP Deskjet 3052a E-all-in-one Printer j611f
+- HP Deskjet 3052a E-all-in-one Printer j611g
+- HP Deskjet 3054a E-all-in-one Printer j611c
+- HP Deskjet 3054a E-all-in-one Printer j611d
+- HP Deskjet 3054a E-all-in-one Printer j611j
+- HP Deskjet 3055a E-all-in-one Printer j611n
+- HP Deskjet 3056a E-all-in-one Printer
+- HP Deskjet 3057a E-all-in-one Printer j611n
+- HP Deskjet 3059a E-all-in-one Printer j611n
+- HP deskjet 3070 b611
+- HP Deskjet 3070 b611 Series
+- HP Deskjet 3320
+- HP Deskjet 3320 Color Inkjet Printer
+- HP Deskjet 3320v Color Inkjet Printer
+- HP Deskjet 3322 Color Inkjet Printer
+- HP Deskjet 3323 Color Inkjet Printer
+- HP Deskjet 3325
+- HP Deskjet 3420
+- HP Deskjet 3420 Color Inkjet Printer
+- HP Deskjet 3420v Color Inkjet Printer
+- HP Deskjet 3425
+- HP Deskjet 3450
+- HP Deskjet 3500
+- HP Deskjet 3500 Color Inkjet Printer
+- HP deskjet 3510
+- HP Deskjet 3510 E-all-in-one
+- HP Deskjet 3510 Series
+- HP Deskjet 3511 E-all-in-one
+- HP Deskjet 3512 E-all-in-one
+- HP deskjet 3520
+- HP Deskjet 3520 Color Inkjet Printer
+- HP Deskjet 3520 E-all-in-one
+- HP Deskjet 3520 Series
+- HP Deskjet 3520v Color Inkjet Printer
+- HP Deskjet 3520w Color Inkjet Printer
+- HP Deskjet 3521 E-all-in-one Printer
+- HP Deskjet 3522 E-all-in-one Printer
+- HP Deskjet 3524 E-all-in-one Printer
+- HP Deskjet 3526 E-all-in-one Printer
+- HP Deskjet 3535 Color Inkjet Printer
+- HP Deskjet 3538 Color Inkjet Printer
+- HP deskjet 3540
+- HP Deskjet 3540 Series
+- HP Deskjet 3550
+- HP Deskjet 3550 Color Inkjet Printer
+- HP Deskjet 3550v Color Inkjet Printer
+- HP Deskjet 3550w Color Inkjet Printer
+- HP Deskjet 3558 Color Inkjet Printer
+- HP Deskjet 3600
+- HP Deskjet 3600 Color Inkjet Printer
+- HP Deskjet 3620 Color Inkjet Printer
+- HP deskjet 3630
+- HP Deskjet 3630 All-in-one Printer
+- HP Deskjet 3630 Series
+- HP Deskjet 3632 All-in-one Printer
+- HP Deskjet 3633 All-in-one Printer
+- HP Deskjet 3634 All-in-one Printer
+- HP Deskjet 3645 Color Inkjet Printer
+- HP Deskjet 3647 Color Inkjet Printer
+- HP Deskjet 3650
+- HP Deskjet 3650 Color Inkjet Printer
+- HP Deskjet 3651 Color Inkjet Printer
+- HP Deskjet 3652 Color Inkjet Printer
+- HP Deskjet 3653 Color Inkjet Printer
+- HP Deskjet 3658 Color Inkjet Printer
+- HP Deskjet 3668 Color Inkjet Printer
+- HP deskjet 3700
+- HP Deskjet 3700 All-in-one
+- HP Deskjet 3700 Series
+- HP Deskjet 3720 All-in-one
+- HP Deskjet 3730 All-in-one
+- HP Deskjet 3740
+- HP Deskjet 3740 Color Inkjet Printer
+- HP Deskjet 3743 Color Inkjet Printer
+- HP Deskjet 3744 Color Inkjet Printer
+- HP Deskjet 3745 Color Inkjet Printer
+- HP Deskjet 3745v Color Inkjet Printer
+- HP Deskjet 3747 Color Inkjet Printer
+- HP Deskjet 3748 Color Inkjet Printer
+- HP Deskjet 3755 All-in-one
+- HP Deskjet 3810
+- HP Deskjet 3816
+- HP Deskjet 3816 Color Inkjet Printer
+- HP Deskjet 3818 Color Inkjet Printer
+- HP Deskjet 3819
+- HP Deskjet 3820
+- HP Deskjet 3820 Color Inkjet Printer
+- HP Deskjet 3820v Color Inkjet Printer
+- HP Deskjet 3820w Color Inkjet Printer
+- HP Deskjet 3822
+- HP deskjet 3830
+- HP Deskjet 3830 Series
+- HP Deskjet 3840
+- HP Deskjet 3843 Color Inkjet Printer
+- HP Deskjet 3844 Color Inkjet Printer
+- HP Deskjet 3845 Color Inkjet Printer
+- HP Deskjet 3845xi Color Inkjet Printer
+- HP Deskjet 3847 Color Inkjet Printer
+- HP Deskjet 3848 Color Inkjet Printer
+- HP Deskjet 3870
+- HP Deskjet 3900
+- HP Deskjet 3910
+- HP Deskjet 3910 Color Inkjet Printer
+- HP Deskjet 3915 Color Inkjet Printer
+- HP Deskjet 3918 Color Inkjet Printer
+- HP Deskjet 3920
+- HP Deskjet 3930 Color Inkjet Printer
+- HP Deskjet 3930v Color Inkjet Printer
+- HP Deskjet 3938 Color Inkjet Printer
+- HP Deskjet 3940
+- HP Deskjet 3940 Color Inkjet Printer
+- HP Deskjet 3940v Color Inkjet Printer
+- HP deskjet 4100
+- HP Deskjet 4100 Series
+- HP Deskjet 4200 **[plugin]**
+- HP Deskjet 4200 All-in-one Printer **[plugin]**
+- HP Deskjet 4200 Series **[plugin]**
+- HP Deskjet 4200e All-in-one Printer **[plugin]**
+- HP deskjet 4300 **[plugin]**
+- HP Deskjet 4300 All-in-one Printer **[plugin]**
+- HP Deskjet 4300 Series **[plugin]**
+- HP Deskjet 4300e All-in-one Printer **[plugin]**
+- HP deskjet 4510
+- HP Deskjet 4510 Series
+- HP deskjet 4530
+- HP Deskjet 4530 Series
+- HP deskjet 4610
+- HP Deskjet 4610 Series
+- HP deskjet 4620
+- HP Deskjet 4620 Series
+- HP deskjet 4640
+- HP Deskjet 4640 Series
+- HP deskjet 4670
+- HP Deskjet 4670 Series
+- HP deskjet 4720
+- HP Deskjet 4720 Series
+- HP deskjet 4800
+- HP Deskjet 4800 Series
+- HP Deskjet 4900 **[plugin]**
+- HP Deskjet 4900 Series **[plugin]**
+- HP deskjet 5000
+- HP Deskjet 5000 Series
+- HP Deskjet 5100 **[plugin]**
+- HP Deskjet 5100 Color Inkjet Printer
+- HP Deskjet 5100 Series **[plugin]**
+- HP Deskjet 5145 Color Inkjet Printer
+- HP Deskjet 5150 Color Inkjet Printer
+- HP Deskjet 5150v Color Inkjet Printer
+- HP Deskjet 5150w Color Inkjet Printer
+- HP Deskjet 5151 Color Inkjet Printer
+- HP Deskjet 5160 Color Inkjet Printer
+- HP Deskjet 5168 Color Inkjet Printer
+- HP deskjet 5200
+- HP Deskjet 5200 Series
+- HP deskjet 5400
+- HP Deskjet 5400 Series
+- HP Deskjet 5420v Photo Printer
+- HP Deskjet 5432 Photo Printer
+- HP Deskjet 5438 Photo Printer
+- HP Deskjet 5440 Photo Printer
+- HP Deskjet 5440v Photo Printer
+- HP Deskjet 5440xi Photo Printer
+- HP Deskjet 5442 Photo Printer
+- HP Deskjet 5443 Photo Printer
+- HP deskjet 5520
+- HP Deskjet 5520 Series
+- HP Deskjet 5550
+- HP Deskjet 5550 Color Inkjet Printer
+- HP Deskjet 5550v Color Inkjet Printer
+- HP Deskjet 5550w Color Inkjet Printer
+- HP Deskjet 5551
+- HP Deskjet 5552
+- HP deskjet 5570
+- HP Deskjet 5570 Series
+- HP Deskjet 5600
+- HP deskjet 5640
+- HP Deskjet 5640 Series
+- HP Deskjet 5650
+- HP Deskjet 5650 Color Inkjet Printer
+- HP Deskjet 5650v Color Inkjet Printer
+- HP Deskjet 5650w Color Inkjet Printer
+- HP Deskjet 5652
+- HP Deskjet 5655 Color Inkjet Printer
+- HP Deskjet 5700
+- HP Deskjet 5700 Color Inkjet Printer
+- HP deskjet 5730
+- HP Deskjet 5730 Series
+- HP Deskjet 5740 Color Inkjet Printer
+- HP Deskjet 5740xi Color Inkjet Printer
+- HP Deskjet 5743 Color Inkjet Printer
+- HP Deskjet 5745 Color Inkjet Printer
+- HP Deskjet 5748 Color Inkjet Printer
+- HP Deskjet 5800 **[plugin]**
+- HP Deskjet 5800 Series **[plugin]**
+- HP deskjet 5810
+- HP Deskjet 5810 Series
+- HP deskjet 5820
+- HP Deskjet 5820 Series
+- HP Deskjet 5850
+- HP Deskjet 5850 Color Inkjet Printer
+- HP Deskjet 5850w Color Inkjet Printer
+- HP deskjet 5900
+- HP Deskjet 5900 Series
+- HP Deskjet 5938 Photo Printer
+- HP Deskjet 5940 Photo Printer
+- HP Deskjet 5940xi Photo Printer
+- HP Deskjet 5943 Photo Printer
+- HP Deskjet 6120
+- HP Deskjet 6122
+- HP Deskjet 6127
+- HP Deskjet 6500
+- HP Deskjet 6500 Color Inkjet Printer
+- HP deskjet 6520
+- HP Deskjet 6520 Color Inkjet Printer
+- HP Deskjet 6520 Series
+- HP Deskjet 6520xi Color Inkjet Printer
+- HP Deskjet 6540 Color Inkjet Printer
+- HP Deskjet 6540d Color Inkjet Printer
+- HP Deskjet 6540dt Color Inkjet Printer
+- HP Deskjet 6540xi Color Inkjet Printer
+- HP Deskjet 6543 Color Inkjet Printer
+- HP Deskjet 6543d Color Inkjet Printer
+- HP Deskjet 6548 Color Inkjet Printer
+- HP Deskjet 6600
+- HP Deskjet 6600 Color Inkjet Printer
+- HP Deskjet 6620 Color Inkjet Printer
+- HP Deskjet 6620xi Color Inkjet Printer
+- HP Deskjet 6623 Color Inkjet Printer
+- HP Deskjet 6628 Color Inkjet Printer
+- HP Deskjet 6800
+- HP Deskjet 6800 Color Inkjet Printer
+- HP Deskjet 6830v Color Inkjet Printer
+- HP Deskjet 6840 Color Inkjet Printer
+- HP Deskjet 6840dt Color Inkjet Printer
+- HP Deskjet 6840xi Color Inkjet Printer
+- HP Deskjet 6843 Color Inkjet Printer
+- HP Deskjet 6848 Color Inkjet Printer
+- HP Deskjet 6850 Color Inkjet Printer
+- HP deskjet 6940
+- HP Deskjet 6940 Printer
+- HP Deskjet 6940 Series
+- HP Deskjet 6940dt Printer
+- HP Deskjet 6943 Printer
+- HP deskjet 6980
+- HP Deskjet 6980 Printer
+- HP Deskjet 6980 Series
+- HP Deskjet 6980dt Printer
+- HP Deskjet 6980xi Printer
+- HP Deskjet 6983 Printer
+- HP Deskjet 6988 Printer
+- HP Deskjet 6988dt Printer
+- HP Deskjet 6988xi Printer
+- HP Deskjet 9300
+- HP Deskjet 9600
+- HP Deskjet 9650 Printer
+- HP Deskjet 9670 Printer
+- HP Deskjet 9680 Printer
+- HP Deskjet 9680gp Printer
+- HP Deskjet 9800
+- HP Deskjet 9800 Printer
+- HP Deskjet 9800d Printer
+- HP Deskjet 9803 Printer
+- HP Deskjet 9803d Printer
+- HP Deskjet 9808 Printer
+- HP Deskjet 9808d Printer
+- HP Deskjet 9860 Printer
+- HP Deskjet 9868 Printer
+- HP Deskjet d730
+- HP deskjet d1300
+- HP Deskjet d1300 Series
+- HP Deskjet d1311 Printer
+- HP Deskjet d1320 Printer
+- HP Deskjet d1330 Printer
+- HP Deskjet d1341 Printer
+- HP Deskjet d1360 Printer
+- HP Deskjet d1368 Printer
+- HP deskjet d1400
+- HP Deskjet d1400 Series
+- HP Deskjet d1415 Printer
+- HP Deskjet d1420 Printer
+- HP Deskjet d1430 Printer
+- HP Deskjet d1445 Printer
+- HP Deskjet d1455 Printer
+- HP Deskjet d1460 Printer
+- HP Deskjet d1468 Printer
+- HP Deskjet d1470 Printer
+- HP deskjet d1500
+- HP Deskjet d1500 Series
+- HP Deskjet d1520 Printer
+- HP Deskjet d1530 Printer
+- HP Deskjet d1550 Printer
+- HP Deskjet d1555 Printer
+- HP Deskjet d1558 Printer
+- HP Deskjet d1560 Printer
+- HP Deskjet d1568 Printer
+- HP deskjet d1600
+- HP Deskjet d1600 Series
+- HP Deskjet d1620 Printer
+- HP Deskjet d1630 Printer
+- HP Deskjet d1650 Printer
+- HP Deskjet d1658 Printer
+- HP Deskjet d1660 Printer
+- HP Deskjet d1663 Printer
+- HP Deskjet d1668 Printer
+- HP deskjet d2300
+- HP Deskjet d2300 Series
+- HP Deskjet d2320 Printer
+- HP Deskjet d2330 Printer
+- HP Deskjet d2345 Printer
+- HP Deskjet d2360 Printer
+- HP Deskjet d2368 Printer
+- HP deskjet d2400
+- HP Deskjet d2400 Series
+- HP Deskjet d2430 Printer
+- HP Deskjet d2445 Printer
+- HP Deskjet d2460 Printer
+- HP Deskjet d2466 Printer
+- HP Deskjet d2468 Printer
+- HP deskjet d2500
+- HP Deskjet d2500 Series
+- HP Deskjet d2530 Printer
+- HP Deskjet d2545 Printer
+- HP Deskjet d2560 Printer
+- HP Deskjet d2563 Printer
+- HP Deskjet d2566 Printer
+- HP Deskjet d2568 Printer
+- HP deskjet d2600
+- HP Deskjet d2600 Series
+- HP Deskjet d2645 Printer
+- HP Deskjet d2660 Printer
+- HP Deskjet d2663 Printer
+- HP Deskjet d2666 Printer
+- HP Deskjet d2668 Printer
+- HP Deskjet d2680 Printer
+- HP deskjet d4100
+- HP Deskjet d4100 Series
+- HP Deskjet d4145 Printer
+- HP Deskjet d4155 Printer
+- HP Deskjet d4160 Printer
+- HP Deskjet d4163 Printer
+- HP Deskjet d4168 Printer
+- HP deskjet d4200
+- HP Deskjet d4200 Series
+- HP Deskjet d4245 Printer
+- HP Deskjet d4260 Printer
+- HP Deskjet d4263 Printer
+- HP Deskjet d4266 Printer
+- HP Deskjet d4268 Printer
+- HP deskjet d4300
+- HP Deskjet d4300 Series
+- HP Deskjet d4360 Printer
+- HP Deskjet d4363 Printer
+- HP Deskjet d4368 Printer
+- HP deskjet d5500
+- HP Deskjet d5500 Series
+- HP Deskjet d5545 Printer
+- HP Deskjet d5560 Printer
+- HP Deskjet d5563 Printer
+- HP Deskjet d5568 Printer
+- HP deskjet f300
+- HP Deskjet f300 Series
+- HP Deskjet f310 All-in-one Printer
+- HP Deskjet f325 All-in-one Printer
+- HP Deskjet f335 All-in-one Printer
+- HP Deskjet f340 All-in-one Printer
+- HP Deskjet f350 All-in-one Printer
+- HP Deskjet f370 All-in-one Printer
+- HP Deskjet f375 All-in-one Printer
+- HP Deskjet f378 All-in-one Printer
+- HP Deskjet f379 All-in-one Printer
+- HP Deskjet f380 All-in-one Printer
+- HP Deskjet f385 All-in-one Printer
+- HP Deskjet f388 All-in-one Printer
+- HP Deskjet f390 All-in-one Printer
+- HP Deskjet f394 All-in-one Printer
+- HP Deskjet f735
+- HP deskjet f2100
+- HP Deskjet f2100 Series
+- HP Deskjet f2110 All-in-one Printer
+- HP Deskjet f2120 All-in-one Printer
+- HP Deskjet f2128 All-in-one Printer
+- HP Deskjet f2140 All-in-one Printer
+- HP Deskjet f2179 All-in-one Printer
+- HP Deskjet f2180 All-in-one Printer
+- HP Deskjet f2185 All-in-one Printer
+- HP Deskjet f2187 All-in-one Printer
+- HP Deskjet f2188 All-in-one Printer
+- HP deskjet f2200
+- HP Deskjet f2200 Series
+- HP Deskjet f2210 All-in-one Printer
+- HP Deskjet f2212 All-in-one Printer
+- HP Deskjet f2214 All-in-one Printer
+- HP Deskjet f2224 All-in-one Printer
+- HP Deskjet f2235 All-in-one Printer
+- HP Deskjet f2238 All-in-one Printer
+- HP Deskjet f2240 All-in-one Printer
+- HP Deskjet f2250 All-in-one Printer
+- HP Deskjet f2275 All-in-one Printer
+- HP Deskjet f2276 All-in-one Printer
+- HP Deskjet f2280 All-in-one Printer
+- HP Deskjet f2288 All-in-one Printer
+- HP Deskjet f2290 All-in-one Printer
+- HP deskjet f2400
+- HP Deskjet f2400 Series
+- HP Deskjet f2410 All-in-one Printer
+- HP Deskjet f2418 All-in-one Printer
+- HP Deskjet f2420 All-in-one Printer
+- HP Deskjet f2423 All-in-one Printer
+- HP Deskjet f2430 All-in-one Printer
+- HP Deskjet f2440 All-in-one Printer
+- HP Deskjet f2476 All-in-one Printer
+- HP Deskjet f2480 All-in-one Printer
+- HP Deskjet f2483 All-in-one Printer
+- HP Deskjet f2488 All-in-one Printer
+- HP Deskjet f2492 All-in-one Printer
+- HP Deskjet f2493 All-in-one Printer
+- HP deskjet f4100
+- HP Deskjet f4100 Series
+- HP Deskjet f4135 All-in-one Printer
+- HP Deskjet f4140 All-in-one Printer
+- HP Deskjet f4150 All-in-one Printer
+- HP Deskjet f4172 All-in-one Printer
+- HP Deskjet f4175 All-in-one Printer
+- HP Deskjet f4180 All-in-one Printer
+- HP Deskjet f4185 All-in-one Printer
+- HP Deskjet f4188 All-in-one Printer
+- HP Deskjet f4190 All-in-one Printer
+- HP Deskjet f4194 All-in-one Printer
+- HP deskjet f4200
+- HP Deskjet f4200 Series
+- HP Deskjet f4210 All-in-one Printer
+- HP Deskjet f4213 All-in-one Printer
+- HP Deskjet f4224 All-in-one Printer
+- HP Deskjet f4230 All-in-one Printer
+- HP Deskjet f4235 All-in-one Printer
+- HP Deskjet f4238 All-in-one Printer
+- HP Deskjet f4240 All-in-one Printer
+- HP Deskjet f4250 All-in-one Printer
+- HP Deskjet f4272 All-in-one Printer
+- HP Deskjet f4273 All-in-one Printer
+- HP Deskjet f4274 All-in-one Printer
+- HP Deskjet f4275 All-in-one Printer
+- HP Deskjet f4280 All-in-one Printer
+- HP Deskjet f4283 All-in-one Printer
+- HP Deskjet f4288 All-in-one Printer
+- HP Deskjet f4292 All-in-one Printer
+- HP Deskjet f4293 All-in-one Printer
+- HP Deskjet f4294 All-in-one Printer
+- HP deskjet f4400
+- HP Deskjet f4400 Series
+- HP Deskjet f4435 All-in-one Printer
+- HP Deskjet f4440 All-in-one Printer
+- HP Deskjet f4450 All-in-one Printer
+- HP Deskjet f4470 All-in-one Printer
+- HP Deskjet f4472 All-in-one Printer
+- HP Deskjet f4473 All-in-one Printer
+- HP Deskjet f4480 All-in-one Printer
+- HP Deskjet f4483 All-in-one Printer
+- HP Deskjet f4488 All-in-one Printer
+- HP Deskjet f4492 All-in-one Printer
+- HP deskjet f4500
+- HP Deskjet f4500 Series
+- HP Deskjet Ink Adv 2010 k010
+- HP Deskjet Ink Adv 2060 k110
+- HP Deskjet Ink Advant k109a-z
+- HP Deskjet Ink Advant k209a-z
+- HP Deskjet Ink Advantage 1010 Printer
+- HP Deskjet Ink Advantage 1015 Printer
+- HP Deskjet Ink Advantage 1018 Printer
+- HP Deskjet Ink Advantage 1110 Printer
+- HP Deskjet Ink Advantage 1115 Printer
+- HP Deskjet Ink Advantage 1118 Printer
+- HP Deskjet Ink Advantage 1200
+- HP Deskjet Ink Advantage 1510 All-in-one Printer
+- HP Deskjet Ink Advantage 1515 All-in-one Printer
+- HP Deskjet Ink Advantage 1516 All-in-one Printer
+- HP Deskjet Ink Advantage 1518 All-in-one Printer
+- HP Deskjet Ink Advantage 2020hc Printer
+- HP Deskjet Ink Advantage 2130 All-in_one Printer
+- HP Deskjet Ink Advantage 2135 All-in_one Printer
+- HP Deskjet Ink Advantage 2136 All-in_one Printer
+- HP Deskjet Ink Advantage 2138 All-in_one Printer
+- HP Deskjet Ink Advantage 2200 All-in-one
+- HP Deskjet Ink Advantage 2300 All-in-one
+- HP Deskjet Ink Advantage 2510 All-in-one
+- HP Deskjet Ink Advantage 2515 All-in-one Printer
+- HP Deskjet Ink Advantage 2516 All-in-one Printer
+- HP Deskjet Ink Advantage 2520hc All-in-one
+- HP Deskjet Ink Advantage 2540 All-in-one Printer
+- HP Deskjet Ink Advantage 2545 All-in-one Printer
+- HP Deskjet Ink Advantage 2546 All-in-one Printer
+- HP Deskjet Ink Advantage 2548 All-in-one Printer
+- HP Deskjet Ink Advantage 2635 All-in-one
+- HP Deskjet Ink Advantage 2636 All-in-one
+- HP Deskjet Ink Advantage 2645 All-in-one Printer
+- HP Deskjet Ink Advantage 2646 All-in-one Printer
+- HP Deskjet Ink Advantage 2675 All-in-one
+- HP Deskjet Ink Advantage 2676 All-in-one
+- HP Deskjet Ink Advantage 2677 All-in-one
+- HP Deskjet Ink Advantage 2678 All-in-one
+- HP Deskjet Ink Advantage 2700 All-in-one Printer
+- HP Deskjet Ink Advantage 2800 All-in-one Printer **[plugin]**
+- HP Deskjet Ink Advantage 2900 All-in-one Printer **[plugin]**
+- HP Deskjet Ink Advantage 3515 E-all-in-one
+- HP Deskjet Ink Advantage 3516 E-all-in-one
+- HP Deskjet Ink Advantage 3525 E-all-in-one
+- HP Deskjet Ink Advantage 3540 E-all-in-one Printer
+- HP Deskjet Ink Advantage 3545 E-all-in-one Printer
+- HP Deskjet Ink Advantage 3546 E-all-in-one Printer
+- HP Deskjet Ink Advantage 3630 All-in-one Printer
+- HP Deskjet Ink Advantage 3635 All-in-one Printer
+- HP Deskjet Ink Advantage 3636 All-in-one Printer
+- HP Deskjet Ink Advantage 3638 All-in-one Printer
+- HP Deskjet Ink Advantage 3775 All-in-one
+- HP Deskjet Ink Advantage 3776 All-in-one
+- HP Deskjet Ink Advantage 3785 All-in-one
+- HP Deskjet Ink Advantage 3830 All-in-one Printer
+- HP Deskjet Ink Advantage 3835 All-in-one Printer
+- HP Deskjet Ink Advantage 3836 All-in-one Printer
+- HP Deskjet Ink Advantage 4200 All-in-one Printer **[plugin]**
+- HP Deskjet Ink Advantage 4300 All-in-one Printer **[plugin]**
+- HP Deskjet Ink Advantage 4515 E-all-in-one Printer
+- HP Deskjet Ink Advantage 4518 E-all-in-one Printer
+- HP Deskjet Ink Advantage 4530 All-in-one
+- HP Deskjet Ink Advantage 4535 All-in-one
+- HP Deskjet Ink Advantage 4536 All-in-one
+- HP Deskjet Ink Advantage 4610 All-in-one Printer
+- HP Deskjet Ink Advantage 4615 All-in-one Printer
+- HP Deskjet Ink Advantage 4620 E-all-in-one Printer
+- HP Deskjet Ink Advantage 4625 E-all-in-one Printer
+- HP Deskjet Ink Advantage 4640 E-all-in-one Printer
+- HP Deskjet Ink Advantage 4645 E-all-in-one Printer
+- HP Deskjet Ink Advantage 4646 E-all-in-one Printer
+- HP Deskjet Ink Advantage 4648 E-all-in-one Printer
+- HP Deskjet Ink Advantage 4670 All-in-one
+- HP Deskjet Ink Advantage 4675 All-in-one
+- HP Deskjet Ink Advantage 4676 All-in-one
+- HP Deskjet Ink Advantage 5570 All-in-one
+- HP Deskjet Ink Advantage 5575 All-in-one
+- HP Deskjet Ink Advantage 5640 All-in-one Printer
+- HP Deskjet Ink Advantage 5645 All-in-one Printer
+- HP Deskjet Ink Advantage Ultra 2529 All-in-one Printer
+- HP Deskjet Ink Advantage Ultra 4720 All-in-one Printer
+- HP Deskjet Ink Advantage Ultra 4729 All-in-one Printer
+- HP Deskjet Ink Advantage Ultra 5738 All-in-one Printer
+- HP Deskjet Ink Advantage Ultra 5739 All-in-one Printer
+- HP deskjet plus 4100
+- HP Deskjet Plus 4100 Series
+- HP deskjet plus 6000
+- HP Deskjet Plus 6000 Series
+- HP deskjet plus 6400
+- HP Deskjet Plus 6400 Series
+- HP deskjet plus ink advantage 6100
+- HP Deskjet Plus Ink Advantage 6100 Series
+- HP deskjet plus ink advantage 6500
+- HP Deskjet Plus Ink Advantage 6500 Series
+- HP Deskjet Ultra Ink Advantage 2029 Printer
+
+#### HP ENVY
+
+- HP envy 100 d410
+- HP Envy 100 d410 Series
+- HP envy 110
+- HP Envy 110 E-all-in-one
+- HP Envy 110 Series
+- HP Envy 111 E-all-in-one
+- HP Envy 114 E-all-in-one
+- HP envy 120
+- HP Envy 120 E-all-in-one
+- HP Envy 120 Series
+- HP Envy 121 E-all-in-one
+- HP envy 4500
+- HP Envy 4500 E-all-in-one
+- HP Envy 4500 Series
+- HP Envy 4501 E-all-in-one
+- HP Envy 4502 E-all-in-one
+- HP Envy 4503 E-all-in-one
+- HP Envy 4504 E-all-in-one
+- HP Envy 4505 E-all-in-one
+- HP Envy 4507 E-all-in-one
+- HP Envy 4508 E-all-in-one
+- HP envy 4510
+- HP Envy 4510 All-in-one
+- HP Envy 4510 Series
+- HP Envy 4512 All-in-one
+- HP Envy 4516 All-in-one
+- HP envy 4520
+- HP Envy 4520 All-in-one Printer
+- HP Envy 4520 Series
+- HP Envy 4522 All-in-one Printer
+- HP envy 5000
+- HP Envy 5000 All-in-one
+- HP Envy 5000 Series
+- HP Envy 5020 All-in-one
+- HP Envy 5030 All-in-one
+- HP Envy 5032 All-in-one
+- HP envy 5530
+- HP Envy 5530 E-all-in-one Printer
+- HP Envy 5530 Series
+- HP Envy 5531 E-all-in-one Printer
+- HP Envy 5532 E-all-in-one Printer
+- HP Envy 5534 E-all-in-one Printer
+- HP Envy 5535 E-all-in-one Printer
+- HP Envy 5536 E-all-in-one Printer
+- HP Envy 5539 E-all-in-one Printer
+- HP envy 5540
+- HP Envy 5540 All-in-one Printer
+- HP Envy 5540 Series
+- HP Envy 5542 E-all-in-one Printer
+- HP Envy 5543 All-in-one Printer
+- HP Envy 5544 All-in-one Printer
+- HP Envy 5545 E-all-in-one Printer
+- HP Envy 5546 All-in-one Printer
+- HP envy 5640
+- HP Envy 5640 E-all-in-one
+- HP Envy 5640 Series
+- HP Envy 5642 E-all-in-one
+- HP Envy 5643 E-all-in-one
+- HP Envy 5644 E-all-in-one
+- HP envy 5660
+- HP Envy 5660 E-all-in-one
+- HP Envy 5660 Series
+- HP Envy 5665 E-all-in-one
+- HP envy 6000
+- HP Envy 6000 Series
+- HP envy 6100
+- HP Envy 6100 Series
+- HP envy 6100e
+- HP Envy 6100e Series
+- HP envy 6400
+- HP Envy 6400 Series
+- HP envy 6500
+- HP Envy 6500 Series
+- HP envy 6500e
+- HP Envy 6500e Series
+- HP envy 7640
+- HP Envy 7640 E-all-in-one
+- HP Envy 7640 Series
+- HP Envy 7645 E-all-in-one
+- HP envy 8000
+- HP Envy 8000 Series
+- HP envy inspire 7200
+- HP Envy Inspire 7200 Series
+- HP envy inspire 7900
+- HP Envy Inspire 7900 Series
+- HP envy photo 6200
+- HP Envy Photo 6200 All-in-one
+- HP Envy Photo 6200 Series
+- HP Envy Photo 6220 All-in-one
+- HP Envy Photo 6230 All-in-one
+- HP Envy Photo 6232 All-in-one
+- HP Envy Photo 6234 All-in-one
+- HP envy photo 7100
+- HP Envy Photo 7100 All-in-one
+- HP Envy Photo 7100 Series
+- HP Envy Photo 7120 All-in-one
+- HP Envy Photo 7130 All-in-one
+- HP Envy Photo 7134 All-in-one
+- HP Envy Photo 7155 All-in-one
+- HP Envy Photo 7164 All-in-one
+- HP envy photo 7200
+- HP Envy Photo 7200 Series
+- HP envy photo 7800
+- HP Envy Photo 7800 All-in-one
+- HP Envy Photo 7800 Series
+- HP Envy Photo 7820 All-in-one
+- HP Envy Photo 7830 All-in-one
+- HP Envy Photo 7855 All-in-one
+- HP envy photo 7900
+- HP Envy Photo 7900 Series
+- HP envy pro 6400
+- HP Envy Pro 6400 Series
+
+#### HP LaserJet
+
+- HP LaserJet 4 Plus
+- HP LaserJet 4 Plus Printer
+- HP LaserJet 4 PostScript 600DPI
+- HP LaserJet 4l
+- HP LaserJet 4l Printer
+- HP LaserJet 4l Pro Printer
+- HP LaserJet 4lc Printer
+- HP LaserJet 4m Plus Printer
+- HP LaserJet 4ML
+- HP LaserJet 4mp
+- HP LaserJet 4si
+- HP LaserJet 4si Mx Printer
+- HP LaserJet 4si Printer
+- HP LaserJet 4Si/4Si MX 600 dpi
+- HP LaserJet 4v
+- HP LaserJet 4V/4MV
+- HP LaserJet 5l
+- HP LaserJet 5l Printer
+- HP LaserJet 5l Xtra Printer
+- HP LaserJet 5l-fs Printer
+- HP LaserJet 5mp
+- HP LaserJet 5P
+- HP LaserJet 5si
+- HP LaserJet 5si Hm Printer
+- HP LaserJet 5si Mopier
+- HP LaserJet 5si Mopier Engine
+- HP LaserJet 5Si Mopier PS
+- HP LaserJet 5si Mx Printer
+- HP LaserJet 5si Nx Printer
+- HP LaserJet 5si Printer
+- HP LaserJet 6l
+- HP LaserJet 6l Gold Printer
+- HP LaserJet 6l Printer
+- HP LaserJet 6l Pro Printer
+- HP LaserJet 6lse Printer
+- HP LaserJet 6lxi Printer
+- HP LaserJet 6mp
+- HP LaserJet 6mp Printer
+- HP LaserJet 6mp Se Printer
+- HP LaserJet 6mp Xi Printer
+- HP LaserJet 6p
+- HP LaserJet 6P/6MP
+- HP LaserJet 100 color MFP M175
+- HP LaserJet 100 colorMFP M175a
+- HP LaserJet 100 colorMFP M175b
+- HP LaserJet 100 colorMFP M175c
+- HP LaserJet 100 colorMFP M175e
+- HP LaserJet 100 colorMFP M175nw
+- HP LaserJet 100 colorMFP M175p
+- HP LaserJet 100 colorMFP M175q
+- HP LaserJet 100 colorMFP M175r
+- HP LaserJet 200 color M251
+- HP LaserJet 200 color M251b
+- HP LaserJet 200 color M251e
+- HP LaserJet 200 color M251g
+- HP LaserJet 200 color M251j
+- HP LaserJet 200 color M251k
+- HP LaserJet 200 color M251n
+- HP LaserJet 200 color M251nw
+- HP LaserJet 200 color M251p
+- HP LaserJet 200 color M251q
+- HP LaserJet 200 color M251r
+- HP LaserJet 200 color M251u
+- HP LaserJet 200 color M251v
+- HP LaserJet 200 color MFP M275
+- HP LaserJet 200 color MFP M276
+- HP LaserJet 200 colorMFP M275nw
+- HP LaserJet 200 colorMFP M275s
+- HP LaserJet 200 colorMFP M275t
+- HP LaserJet 200 colorMFP M275u
+- HP LaserJet 200 colorMFP M276b
+- HP LaserJet 200 colorMFP M276e
+- HP LaserJet 200 colorMFP M276g
+- HP LaserJet 200 colorMFP M276j
+- HP LaserJet 200 colorMFP M276k
+- HP LaserJet 200 colorMFP M276n
+- HP LaserJet 200 colorMFP M276nw
+- HP LaserJet 200 colorMFP M276p
+- HP LaserJet 200 colorMFP M276q
+- HP LaserJet 200 colorMFP M276r
+- HP LaserJet 200 colorMFP M276u
+- HP LaserJet 200 colorMFP M276v
+- HP LaserJet 300 color M351a
+- HP LaserJet 300 colorMFP M375nw
+- HP LaserJet 400 color M451dn
+- HP LaserJet 400 color M451dw
+- HP LaserJet 400 color M451nw
+- HP LaserJet 400 colorMFP M475dn
+- HP LaserJet 400 colorMFP M475dw
+- HP LaserJet 400 M401
+- HP LaserJet 400 M401a
+- HP LaserJet 400 M401d
+- HP LaserJet 400 M401dn
+- HP LaserJet 400 M401dne
+- HP LaserJet 400 M401dw
+- HP LaserJet 400 M401n
+- HP LaserJet 400 MFP M425
+- HP LaserJet 400 MFP M425dn
+- HP LaserJet 400 MFP M425dw
+- HP LaserJet 410dtn Printer
+- HP LaserJet 500 color M551
+- HP LaserJet 500 color MFP M570
+- HP LaserJet 500 color MFP M575
+- HP LaserJet 500 colorMFP M570dn
+- HP LaserJet 500 colorMFP M570dw
+- HP LaserJet 500 MFP M525
+- HP LaserJet 600 M601
+- HP LaserJet 600 M601 M602 M603
+- HP LaserJet 600 M602
+- HP LaserJet 600 M603
+- HP LaserJet 700 color MFP M775
+- HP LaserJet 700 M712
+- HP LaserJet 1000 **[plugin]**
+- HP laserjet 1005 **[plugin]**
+- HP LaserJet 1005 Series **[plugin]**
+- HP LaserJet 1010
+- HP LaserJet 1012
+- HP LaserJet 1015
+- HP LaserJet 1018 **[plugin]**
+- HP LaserJet 1018 Printer **[plugin]**
+- HP LaserJet 1018s Printer **[plugin]**
+- HP LaserJet 1020 **[plugin]**
+- HP LaserJet 1020 Plus Printer **[plugin]**
+- HP LaserJet 1020 Printer **[plugin]**
+- HP LaserJet 1022 **[plugin]**
+- HP LaserJet 1022n **[plugin]**
+- HP LaserJet 1022n Printer **[plugin]**
+- HP LaserJet 1022nw **[plugin]**
+- HP LaserJet 1022nxi Printer **[plugin]**
+- HP LaserJet 1100
+- HP LaserJet 1100 Printer
+- HP LaserJet 1100a
+- HP LaserJet 1100a All-in-one Printer
+- HP LaserJet 1100a Se All-in-one Printer
+- HP LaserJet 1100se Printer
+- HP LaserJet 1100xi
+- HP LaserJet 1150
+- HP laserjet 1160
+- HP LaserJet 1160 Printer
+- HP LaserJet 1160 Series
+- HP LaserJet 1160le Printer
+- HP LaserJet 1200
+- HP LaserJet 1200 Printer
+- HP LaserJet 1200n
+- HP LaserJet 1200se Printer
+- HP LaserJet 1220
+- HP LaserJet 1220se
+- HP LaserJet 1300
+- HP LaserJet 1300 Printer
+- HP LaserJet 1300 Series
+- HP LaserJet 1300n
+- HP LaserJet 1300t Printer
+- HP LaserJet 1300xi
+- HP LaserJet 1320
+- HP LaserJet 1320 Printer
+- HP LaserJet 1320 series
+- HP LaserJet 1320n
+- HP LaserJet 1320nw
+- HP LaserJet 1320t Printer
+- HP LaserJet 1320tn
+- HP laserjet 2100
+- HP LaserJet 2100 Series
+- HP LaserJet 2200
+- HP LaserJet 2200 Printer
+- HP LaserJet 2200 Series
+- HP LaserJet 2200d Printer
+- HP LaserJet 2200dn Printer
+- HP LaserJet 2200dse Printer
+- HP LaserJet 2200dt Printer
+- HP LaserJet 2200tn Printer
+- HP LaserJet 2300
+- HP LaserJet 2300 Printer
+- HP LaserJet 2300 Series
+- HP LaserJet 2300d Printer
+- HP LaserJet 2300dn Printer
+- HP LaserJet 2300dtn Printer
+- hp LaserJet 2300L
+- HP LaserJet 2300l Printer
+- HP LaserJet 2300n Printer
+- HP LaserJet 2410
+- HP LaserJet 2420
+- HP LaserJet 2420 Printer
+- HP LaserJet 2420d Printer
+- HP LaserJet 2420dn Printer
+- HP LaserJet 2420n Printer
+- HP LaserJet 2430
+- HP LaserJet 2430 Printer
+- HP LaserJet 2430dtn Printer
+- HP LaserJet 2430n Printer
+- HP LaserJet 2430t Printer
+- HP LaserJet 2430tn Printer
+- HP LaserJet 3015
+- HP LaserJet 3020
+- HP LaserJet 3020 3030
+- HP LaserJet 3030
+- HP LaserJet 3050
+- HP LaserJet 3050 All-in-one Printer
+- HP LaserJet 3050z All-in-one Printer
+- HP LaserJet 3052
+- HP LaserJet 3055
+- HP LaserJet 3100
+- HP LaserJet 3100 All-in-one Printer
+- HP LaserJet 3100se All-in-one Printer
+- HP LaserJet 3100xi All-in-one Printer
+- HP LaserJet 3150
+- HP LaserJet 3150 All-in-one Printer
+- HP LaserJet 3150se All-in-one Printer
+- HP LaserJet 3150xi All-in-one Printer
+- HP LaserJet 3200
+- HP LaserJet 3200 All-in-one Printer
+- HP LaserJet 3200m
+- HP LaserJet 3200se All-in-one Printer
+- HP LaserJet 3300 3310 3320
+- HP LaserJet 3300 Multifunction Printer
+- HP LaserJet 3300 Series
+- HP LaserJet 3310 Digital Printer Copier
+- HP LaserJet 3320 Multifunction Printer
+- HP LaserJet 3320n Multifunction Printer
+- HP LaserJet 3330
+- HP LaserJet 3380
+- HP LaserJet 3390
+- HP LaserJet 3392
+- HP laserjet 4000
+- HP LaserJet 4000 Printer
+- HP LaserJet 4000 Series
+- HP LaserJet 4000n Printer
+- HP LaserJet 4000se Printer
+- HP LaserJet 4000t Printer
+- HP LaserJet 4000tn Printer
+- HP laserjet 4050
+- HP LaserJet 4050 Printer
+- HP LaserJet 4050 Series
+- HP LaserJet 4050n Printer
+- HP LaserJet 4050se Printer
+- HP LaserJet 4050t Printer
+- HP LaserJet 4050tn Printer
+- HP laserjet 4100
+- HP LaserJet 4100 MFP
+- HP LaserJet 4100 Multifunction Printer
+- HP LaserJet 4100 Printer
+- HP LaserJet 4100 Series
+- HP LaserJet 4100n Printer
+- HP LaserJet 4100tn Printer
+- HP LaserJet 4101 Multifunction Printer
+- HP laserjet 4150
+- HP LaserJet 4150 Series
+- HP LaserJet 4200
+- HP LaserJet 4200 Printer
+- HP LaserJet 4200 Series
+- HP LaserJet 4200dtn Printer
+- HP LaserJet 4200dtns Printer
+- HP LaserJet 4200dtnsl Printer
+- hp LaserJet 4200L
+- HP LaserJet 4200l Printer
+- HP LaserJet 4200ln Printer
+- HP LaserJet 4200lvn Printer
+- HP LaserJet 4200n Printer
+- HP LaserJet 4200tn Printer
+- HP LaserJet 4240
+- HP LaserJet 4240 Printer
+- hp LaserJet 4240N
+- HP LaserJet 4240n Printer
+- HP LaserJet 4250
+- HP LaserJet 4250 Printer
+- HP LaserJet 4250dtn Printer
+- HP LaserJet 4250dtnsl Printer
+- hp LaserJet 4250L
+- HP LaserJet 4250n Printer
+- HP LaserJet 4250tn Printer
+- HP LaserJet 4300
+- HP LaserJet 4300 Printer
+- HP LaserJet 4300 Series
+- HP LaserJet 4300dtn Printer
+- HP LaserJet 4300dtns Printer
+- HP LaserJet 4300dtnsl Printer
+- HP LaserJet 4300n Printer
+- HP LaserJet 4300tn Printer
+- HP LaserJet 4345 MFP
+- HP LaserJet 4345 Multifunction Printer
+- HP LaserJet 4345x Multifunction Printer
+- HP LaserJet 4345xm Multifunction Printer
+- HP LaserJet 4345xs Multifunction Printer
+- HP LaserJet 4350
+- HP LaserJet 4350 Printer
+- HP LaserJet 4350dtn Printer
+- HP LaserJet 4350dtnsl Printer
+- hp LaserJet 4350L
+- HP LaserJet 4350n Printer
+- HP LaserJet 4350tn Printer
+- HP laserjet 5000
+- HP LaserJet 5000 Printer
+- HP LaserJet 5000 Series
+- HP LaserJet 5000dn Printer
+- HP LaserJet 5000gn Printer
+- HP LaserJet 5000le Printer
+- HP LaserJet 5000n Printer
+- HP laserjet 5100
+- HP LaserJet 5100 Printer
+- HP LaserJet 5100 Series
+- HP LaserJet 5100dtn Printer
+- HP LaserJet 5100le Printer
+- HP LaserJet 5100se Printer
+- HP LaserJet 5100tn Printer
+- HP LaserJet 5200
+- HP LaserJet 5200 Printer
+- HP LaserJet 5200dtn Printer
+- HP LaserJet 5200l
+- HP LaserJet 5200LX
+- HP LaserJet 5200n Printer
+- HP LaserJet 5200tn Printer
+- HP LaserJet 5501
+- HP LaserJet 5502
+- HP LaserJet 6500
+- HP LaserJet 6501
+- HP laserjet 8000
+- HP LaserJet 8000 Printer
+- HP LaserJet 8000 Series
+- HP LaserJet 8000dn Printer
+- HP LaserJet 8000n Printer
+- HP laserjet 8100
+- HP LaserJet 8100 MFP
+- HP LaserJet 8100 Printer
+- HP LaserJet 8100 Series
+- HP LaserJet 8100dn Printer
+- HP LaserJet 8100n Printer
+- HP laserjet 8150
+- HP LaserJet 8150 MFP
+- HP LaserJet 8150 Printer
+- HP LaserJet 8150 Series
+- HP LaserJet 8150dn Printer
+- HP LaserJet 8150hn Printer
+- HP LaserJet 8150n Printer
+- HP LaserJet 8501
+- HP laserjet 9000
+- HP LaserJet 9000 MFP
+- HP LaserJet 9000 Multifunction Printer
+- HP LaserJet 9000 Printer
+- HP LaserJet 9000 Series
+- HP LaserJet 9000dn Printer
+- HP LaserJet 9000hnf Printer
+- HP LaserJet 9000hns Printer
+- HP LaserJet 9000L MFP
+- HP LaserJet 9000l Multifunction Printer
+- HP LaserJet 9000n Printer
+- HP LaserJet 9040
+- HP LaserJet 9040 9050 MFP
+- HP LaserJet 9040 MFP
+- HP LaserJet 9040 Printer
+- HP LaserJet 9040dn Printer
+- HP LaserJet 9040n Printer
+- HP LaserJet 9050
+- HP LaserJet 9050 MFP
+- HP LaserJet 9050 Printer
+- HP LaserJet 9050dn Printer
+- HP LaserJet 9050n Printer
+- HP LaserJet 9055 9065 MFP
+- HP LaserJet 9055mfp
+- HP LaserJet 9065mfp
+- HP LaserJet CM1410 Series
+- HP LaserJet cm1411fn
+- HP LaserJet cm1412fn
+- HP LaserJet cm1413fn
+- HP LaserJet cm1415fn
+- HP LaserJet cm1415fnw
+- HP LaserJet cm1416fnw
+- HP LaserJet cm1417fnw
+- HP LaserJet cm1418fnw
+- HP LaserJet color flow MFP M575
+- HP LaserJet cp1025 **[plugin]**
+- HP LaserJet cp1025nw **[plugin]**
+- HP LaserJet CP1520 Series
+- HP LaserJet CP1521n
+- HP LaserJet CP1522n
+- HP LaserJet CP1523n
+- HP LaserJet CP1525N
+- HP LaserJet CP1525nw
+- HP LaserJet CP1526nw
+- HP LaserJet CP1527nw
+- HP LaserJet CP1528nw
+- HP LaserJet Cp 1025nw **[plugin]**
+- HP LaserJet E40040
+- HP LaserJet E50145
+- HP LaserJet E60055
+- HP LaserJet E60055 E60075
+- HP LaserJet E60055-E60075
+- HP LaserJet E60065
+- HP LaserJet E60075
+- HP LaserJet E60155
+- HP LaserJet E60165
+- HP LaserJet E60175
+- HP LaserJet E62555-E62575
+- HP LaserJet E62655-E62675
+- HP LaserJet Flow 8601
+- HP LaserJet Flow E73130
+- HP LaserJet Flow E73135
+- HP LaserJet Flow E73140
+- HP LaserJet Flow E82650
+- HP LaserJet Flow E82660
+- HP LaserJet Flow E82670
+- HP LaserJet Flow MFP 5602
+- HP LaserJet Flow MFP 6600
+- HP LaserJet Flow MFP E731
+- HP LaserJet Flow MFP E826
+- HP LaserJet Flow MFP E52645
+- HP LaserJet Flow MFP E62565
+- HP LaserJet Flow MFP E62575
+- HP LaserJet Flow MFP E62665
+- HP LaserJet Flow MFP E62675
+- HP LaserJet Flow MFP E72525
+- HP LaserJet Flow MFP E72530
+- HP LaserJet Flow MFP E72535
+- HP LaserJet Flow MFP E82540
+- HP LaserJet Flow MFP E82550
+- HP LaserJet Flow MFP E82560
+- HP LaserJet flow MFP M525
+- HP LaserJet Flow MFP M528
+- HP LaserJet Flow MFP M630
+- HP LaserJet Flow MFP M631
+- HP LaserJet Flow MFP M632
+- HP LaserJet Flow MFP M633
+- HP LaserJet Flow MFP M634
+- HP LaserJet Flow MFP M635
+- HP LaserJet Flow MFP M636
+- HP LaserJet flow MFP M830
+- HP LaserJet Flow MFP x530
+- HP LaserJet Flow MFP x627
+- HP LaserJet m14-m17
+- HP LaserJet m101-m106
+- HP LaserJet m102a
+- HP LaserJet m102w
+- HP LaserJet m104a
+- HP LaserJet m104w
+- HP LaserJet m106w
+- HP LaserJet m109-m112
+- HP LaserJet M203-M206
+- HP LaserJet m207-m212
+- HP LaserJet m207d
+- HP LaserJet m207dw
+- HP LaserJet m208d
+- HP LaserJet m208dw
+- HP LaserJet m209d
+- HP LaserJet m209dw
+- HP LaserJet m209dwe
+- HP LaserJet m210d
+- HP LaserJet m210dw
+- HP LaserJet m210dwe
+- HP LaserJet m211dw
+- HP LaserJet m212d
+- HP LaserJet m212dw
+- HP LaserJet m212dwe
+- HP laserjet m402 m403
+- HP laserjet m402 m403 n
+- HP LaserJet M402d
+- HP LaserJet M402dn
+- HP LaserJet M402dw
+- HP LaserJet M402n
+- HP LaserJet M403d
+- HP LaserJet M403dn
+- HP LaserJet M403dw
+- HP LaserJet M403n
+- HP LaserJet M406
+- HP LaserJet M407
+- HP LaserJet M506
+- HP LaserJet M507
+- HP LaserJet M604
+- HP Laserjet M604 M605 M606
+- HP LaserJet M605
+- HP LaserJet M606
+- HP LaserJet M607
+- HP LaserJet M607 M608 M609
+- HP LaserJet M608
+- HP LaserJet M609
+- HP LaserJet M610
+- HP LaserJet M610 M611 M612
+- HP LaserJet M611
+- HP LaserJet M612
+- HP LaserJet M806
+- HP LaserJet m1005 **[plugin]**
+- HP LaserJet m1120 MFP **[plugin]**
+- HP LaserJet m1120n MFP **[plugin]**
+- HP LaserJet m1319f MFP **[plugin]**
+- HP laserjet m1522 mfp
+- HP LaserJet M1522 MFP Series
+- HP LaserJet M1522n MFP
+- HP LaserJet m1522nf MFP
+- HP LaserJet M1536dnf MFP
+- HP LaserJet m1537dnf MFP
+- HP LaserJet m1538dnf MFP
+- HP LaserJet m1539dnf MFP
+- HP LaserJet m2727 MFP
+- HP LaserJet M2727 MFP Series
+- HP LaserJet M2727nf MFP
+- HP LaserJet M2727nfs MFP
+- HP LaserJet m3027 MFP
+- HP LaserJet m3027 Multifunction Printer
+- HP LaserJet m3027x Multifunction Printer
+- HP LaserJet m3035 MFP
+- HP LaserJet m3035 Multifunction Printer
+- HP LaserJet m3035xs Multifunction Printer
+- HP LaserJet m4345 MFP
+- HP LaserJet m4345 Multifunction Printer
+- HP LaserJet m4345x Multifunction Printer
+- HP LaserJet m4345xm Multifunction Printer
+- HP LaserJet m4345xs Multifunction Printer
+- HP LaserJet m4349 MFP
+- HP LaserJet M4555 MFP
+- HP LaserJet m5025 MFP
+- HP LaserJet m5035 MFP
+- HP LaserJet m5035 Multifunction Printer
+- HP LaserJet m5035x Multifunction Printer
+- HP LaserJet m5035xs Multifunction Printer
+- HP LaserJet m5039 MFP
+- HP LaserJet M9040 M9050 MFP
+- HP LaserJet m9040 MFP
+- HP LaserJet m9050 MFP
+- HP LaserJet m9059 MFP
+- HP LaserJet Managed MFP E826-50-60-70
+- HP LaserJet Managed MFP E82650-60-70
+- HP LaserJet MFP 5601
+- HP LaserJet MFP 5602
+- HP LaserJet MFP 6600
+- HP LaserJet MFP 8601
+- HP LaserJet MFP E730
+- HP LaserJet MFP E731
+- HP LaserJet MFP E731-30-35-40
+- HP LaserJet MFP E826
+- HP LaserJet MFP E42540
+- HP LaserJet MFP E62555
+- HP LaserJet MFP E62565
+- HP LaserJet MFP E62655
+- HP LaserJet MFP E62665
+- HP LaserJet MFP E72425
+- HP LaserJet MFP E72430
+- HP LaserJet MFP E72525
+- HP LaserJet MFP E72525-25-30-35
+- HP LaserJet MFP E72525-30-35
+- HP LaserJet MFP E72530
+- HP LaserJet MFP E72535
+- HP LaserJet MFP E73025
+- HP LaserJet MFP E73030
+- HP LaserJet MFP E73130
+- HP LaserJet MFP E73130-35-40
+- HP LaserJet MFP E73135
+- HP LaserJet MFP E73140
+- HP LaserJet MFP E77822-25-30
+- HP LaserJet MFP E82540
+- HP LaserJet MFP E82540-50-60
+- HP LaserJet MFP E82550
+- HP LaserJet MFP E82560
+- HP LaserJet MFP E82650
+- HP LaserJet MFP E82660
+- HP LaserJet MFP E82670
+- HP LaserJet MFP E87640-50-60
+- HP LaserJet MFP m28-m31
+- HP LaserJet MFP m129-m134
+- HP LaserJet MFP m139-m142
+- HP LaserJet MFP M227-M231
+- HP LaserJet MFP m232-m237
+- HP LaserJet MFP m232d
+- HP LaserJet MFP m232dw
+- HP LaserJet MFP m232dwc
+- HP LaserJet MFP m232sdn
+- HP LaserJet MFP m232sdw
+- HP LaserJet MFP m233d
+- HP LaserJet MFP m233dw
+- HP LaserJet MFP m233sdn
+- HP LaserJet MFP m233sdw
+- HP LaserJet MFP m234dw
+- HP LaserJet MFP m234dwe
+- HP LaserJet MFP m234sdn
+- HP LaserJet MFP m234sdne
+- HP LaserJet MFP m234sdw
+- HP LaserJet MFP m234sdwe
+- HP LaserJet MFP m235d
+- HP LaserJet MFP m235dw
+- HP LaserJet MFP m235dwe
+- HP LaserJet MFP m235sdn
+- HP LaserJet MFP m235sdne
+- HP LaserJet MFP m235sdw
+- HP LaserJet MFP m235sdwe
+- HP LaserJet MFP m236d
+- HP LaserJet MFP m236dw
+- HP LaserJet MFP m236sdn
+- HP LaserJet MFP m236sdw
+- HP LaserJet MFP m237d
+- HP LaserJet MFP m237dw
+- HP LaserJet MFP m237dwe
+- HP LaserJet MFP m237sdn
+- HP LaserJet MFP m237sdne
+- HP laserjet MFP M426 M427
+- HP LaserJet MFP M426dw
+- HP LaserJet MFP M426fdn
+- HP LaserJet MFP M426fdw
+- HP LaserJet MFP M427dw
+- HP LaserJet MFP M427fdn
+- HP LaserJet MFP M427fdw
+- HP LaserJet MFP M430
+- HP LaserJet MFP M431
+- HP LaserJet MFP M527
+- HP LaserJet MFP M630
+- HP LaserJet MFP M631
+- HP LaserJet MFP M631 M632 M633
+- HP LaserJet MFP M632
+- HP LaserJet MFP M633
+- HP LaserJet MFP M634
+- HP LaserJet MFP M634 M635 M636
+- HP LaserJet MFP M635
+- HP LaserJet MFP M636
+- HP LaserJet MFP M725
+- HP LaserJet MFP x529
+- HP LaserJet MFP x530
+- HP LaserJet MFP x627
+- HP LaserJet MFP X728
+- HP LaserJet p1005 **[plugin]**
+- HP LaserJet p1006 **[plugin]**
+- HP LaserJet p1007 **[plugin]**
+- HP LaserJet p1008 **[plugin]**
+- HP LaserJet p1009 **[plugin]**
+- HP LaserJet p1505 **[plugin]**
+- HP LaserJet p1505n **[plugin]**
+- HP LaserJet p2014 **[plugin]**
+- HP LaserJet p2014n **[plugin]**
+- HP laserjet p2015
+- HP LaserJet p2015 Series
+- HP laserjet p2015d
+- HP LaserJet p2015d Series
+- HP laserjet p2015dn
+- HP LaserJet p2015dn Series
+- HP laserjet p2015n
+- HP LaserJet p2015n Series
+- HP laserjet p2015x
+- HP LaserJet p2015x Series
+- HP LaserJet p2035 **[plugin]**
+- HP LaserJet p2035n **[plugin]**
+- HP LaserJet p2055
+- HP LaserJet P2055 Series
+- HP LaserJet p2055d
+- HP LaserJet p2055dn
+- HP LaserJet P2055n
+- HP LaserJet p2055x
+- HP LaserJet p3004
+- HP LaserJet p3005
+- HP LaserJet p3005 Printer
+- HP LaserJet p3005d Printer
+- HP LaserJet p3005dn Printer
+- HP LaserJet p3005dtn Printer
+- HP LaserJet p3005n Printer
+- HP LaserJet p3005x Printer
+- HP laserjet p3010
+- HP LaserJet p3010 Series
+- HP LaserJet P3011
+- HP LaserJet p3011 Printer
+- HP LaserJet P3015
+- HP LaserJet p3015 Printer
+- HP LaserJet P4010 Series
+- HP LaserJet p4014
+- HP LaserJet p4014dn
+- HP LaserJet p4014n
+- HP LaserJet p4015
+- HP LaserJet p4015dn
+- HP LaserJet p4015n
+- HP LaserJet p4015tn
+- HP LaserJet p4015x
+- HP LaserJet p4515
+- HP LaserJet p4515n
+- HP LaserJet p4515tn
+- HP LaserJet p4515x
+- HP LaserJet p4515xm
+- HP LaserJet Pro 3001-3008
+- HP LaserJet Pro 4001
+- HP LaserJet Pro 4002
+- HP LaserJet Pro 4003
+- HP LaserJet Pro 4004
+- HP LaserJet Pro m14cw
+- HP LaserJet Pro m14w
+- HP LaserJet Pro m15w
+- HP LaserJet Pro m16w
+- HP LaserJet Pro m17cw
+- HP LaserJet Pro m17w
+- HP LaserJet Pro M118-M119
+- HP LaserJet Pro M148-M149
+- HP LaserJet Pro M148f-M149f
+- HP LaserJet Pro M201-M202
+- HP LaserJet Pro M201c1
+- HP LaserJet Pro M201c2
+- HP LaserJet Pro M201c3
+- HP LaserJet Pro M201c4
+- HP LaserJet Pro M201c5
+- HP LaserJet Pro M201c6
+- HP LaserJet Pro M201c7
+- HP LaserJet Pro M201c8
+- HP LaserJet Pro M201c9
+- HP LaserJet Pro M201c10
+- HP LaserJet Pro M201dw
+- HP LaserJet Pro M201n
+- HP LaserJet Pro M202dw
+- HP LaserJet Pro M202n
+- HP LaserJet Pro M203-M206
+- HP LaserJet Pro M304-M305
+- HP LaserJet Pro M329
+- HP LaserJet Pro M402-M403
+- HP LaserJet Pro M402-M403n
+- HP LaserJet Pro M404-M405
+- HP LaserJet Pro M428-M429
+- HP LaserJet Pro M428f-M429f
+- HP LaserJet Pro M501
+- HP LaserJet Pro M501dn
+- HP LaserJet Pro M501n
+- HP LaserJet Pro M701
+- HP LaserJet Pro M701a
+- HP LaserJet Pro M701n
+- HP LaserJet Pro M706
+- HP LaserJet Pro M706n
+- HP LaserJet Pro MFP 3101-3108
+- HP LaserJet Pro MFP 4101
+- HP LaserJet Pro MFP 4102
+- HP LaserJet Pro MFP 4103
+- HP LaserJet Pro MFP 4104
+- HP LaserJet Pro MFP m25a
+- HP LaserJet Pro MFP m25nw
+- HP LaserJet Pro MFP m26a
+- HP LaserJet Pro MFP m26nw
+- HP LaserJet Pro MFP m27c
+- HP LaserJet Pro MFP m27cnw
+- HP LaserJet Pro MFP m28w
+- HP LaserJet Pro MFP m29w
+- HP LaserJet Pro MFP m30cw
+- HP LaserJet Pro MFP m30w
+- HP LaserJet Pro MFP m31cw
+- HP LaserJet Pro MFP m31w
+- HP LaserJet Pro MFP m125a
+- HP LaserJet Pro MFP m125nr
+- HP LaserJet Pro MFP m125nw
+- HP LaserJet Pro MFP m125r
+- HP LaserJet Pro MFP m125rnw
+- HP LaserJet Pro MFP m125s
+- HP laserjet pro mfp m126 plus
+- HP LaserJet Pro MFP m126 Plus Series
+- HP LaserJet Pro MFP m126a
+- HP LaserJet Pro MFP m126a Plus
+- HP LaserJet Pro MFP m126nw
+- HP LaserJet Pro MFP m126nw Plus
+- HP LaserJet Pro MFP m126snw Plus
+- HP LaserJet Pro MFP m127fn
+- HP LaserJet Pro MFP m127fp
+- HP LaserJet Pro MFP m127fs
+- HP LaserJet Pro MFP m127fw **[plugin]**
+- HP LaserJet Pro MFP m128fn
+- HP LaserJet Pro MFP m128fp
+- HP LaserJet Pro MFP m128fw
+- HP LaserJet Pro MFP m130a
+- HP LaserJet Pro MFP m130fn
+- HP LaserJet Pro MFP m130fw
+- HP LaserJet Pro MFP m130nw
+- HP LaserJet Pro MFP m132a
+- HP LaserJet Pro MFP m132fn
+- HP LaserJet Pro MFP m132fp
+- HP LaserJet Pro MFP m132fw
+- HP LaserJet Pro MFP m132nw
+- HP LaserJet Pro MFP m132snw
+- HP LaserJet Pro MFP m134a
+- HP LaserJet Pro MFP m134fn
+- HP LaserJet Pro MFP M225-M226
+- HP LaserJet Pro MFP M225c1
+- HP LaserJet Pro MFP M225c2
+- HP LaserJet Pro MFP M225c3
+- HP LaserJet Pro MFP M225c4
+- HP LaserJet Pro MFP M225c5
+- HP LaserJet Pro MFP M225c6
+- HP LaserJet Pro MFP M225c7
+- HP LaserJet Pro MFP M225c8
+- HP LaserJet Pro MFP M225dn
+- HP LaserJet Pro MFP M225dw
+- HP LaserJet Pro MFP M225rdn
+- HP LaserJet Pro MFP M226dn
+- HP LaserJet Pro MFP M226dw
+- HP LaserJet Pro MFP M227-M231
+- HP LaserJet Pro MFP M329
+- HP LaserJet Pro MFP M426-M427
+- HP LaserJet Pro MFP M435
+- HP LaserJet Pro MFP M435nw
+- HP LaserJet Pro MFP M521
+- HP LaserJet Pro MFP M521dn
+- HP LaserJet Pro MFP M521dw
+- HP LaserJet Pro MFP M521dx
+- HP LaserJet Pro MFP M521dz
+- HP laserjet pro p1100 plus
+- HP LaserJet Pro p1100 Plus Series
+- HP LaserJet Pro p1106 Plus
+- HP LaserJet Pro p1108 Plus
+- HP LaserJet Professional m1132 MFP **[plugin]**
+- HP LaserJet Professional m1132 Multifunction Printer **[plugin]**
+- HP LaserJet Professional m1132s Multifunction Printer **[plugin]**
+- HP LaserJet Professional m1136 MFP **[plugin]**
+- HP LaserJet Professional m1137 MFP **[plugin]**
+- HP LaserJet Professional m1138 MFP **[plugin]**
+- HP LaserJet Professional m1139 MFP **[plugin]**
+- HP LaserJet Professional m1212nf MFP **[plugin]**
+- HP LaserJet Professional m1213nf MFP **[plugin]**
+- HP LaserJet Professional m1214nfh MFP **[plugin]**
+- HP LaserJet Professional m1216nfh MFP **[plugin]**
+- HP LaserJet Professional m1217nfw MFP **[plugin]**
+- HP LaserJet Professional m1218nfg MFP **[plugin]**
+- HP LaserJet Professional m1218nfs MFP **[plugin]**
+- HP LaserJet Professional m1219nf MFP **[plugin]**
+- HP LaserJet Professional m1219nfg MFP **[plugin]**
+- HP LaserJet Professional m1219nfs MFP **[plugin]**
+- HP LaserJet Professional p1102 **[plugin]**
+- HP LaserJet Professional p1102 Printer **[plugin]**
+- HP LaserJet Professional p1102s Printer **[plugin]**
+- HP LaserJet Professional p1102w **[plugin]**
+- HP LaserJet Professional p1106 **[plugin]**
+- HP LaserJet Professional p1106w **[plugin]**
+- HP LaserJet Professional p1107 **[plugin]**
+- HP LaserJet Professional p1107w **[plugin]**
+- HP LaserJet Professional p1108 **[plugin]**
+- HP LaserJet Professional p1108w **[plugin]**
+- HP LaserJet Professional p1109 **[plugin]**
+- HP LaserJet Professional p1109w **[plugin]**
+- HP LaserJet Professional p1566 **[plugin]**
+- HP LaserJet Professional p1567 **[plugin]**
+- HP LaserJet Professional p1568 **[plugin]**
+- HP LaserJet Professional p1569 **[plugin]**
+- HP LaserJet Professional p1606dn **[plugin]**
+- HP LaserJet Professional p1607dn **[plugin]**
+- HP LaserJet Professional p1608dn **[plugin]**
+- HP LaserJet Professional p1609dn **[plugin]**
+- HP LaserJet Professional p 1102w **[plugin]**
+- HP LaserJet Tank 150x
+- HP LaserJet Tank 250x
+- HP LaserJet Tank 1020
+- HP LaserJet Tank 1020nw
+- HP LaserJet Tank 1020w
+- HP LaserJet Tank 1502a
+- HP LaserJet Tank 1502w
+- HP LaserJet Tank 1504w
+- HP LaserJet Tank 2502dn
+- HP LaserJet Tank 2502dw
+- HP LaserJet Tank 2503dw
+- HP LaserJet Tank 2504dw
+- HP LaserJet Tank 2506d
+- HP LaserJet Tank 2506dn
+- HP LaserJet Tank 2506dw
+- HP LaserJet Tank MFP 160x
+- HP LaserJet Tank MFP 260x
+- HP LaserJet Tank MFP 1005
+- HP LaserJet Tank MFP 1005nw
+- HP LaserJet Tank MFP 1005w
+- HP LaserJet Tank MFP 1602a
+- HP LaserJet Tank MFP 1602w
+- HP LaserJet Tank MFP 1604w
+- HP LaserJet Tank MFP 2602dn
+- HP LaserJet Tank MFP 2602dw
+- HP LaserJet Tank MFP 2602sdn
+- HP LaserJet Tank MFP 2602sdw
+- HP LaserJet Tank MFP 2603dw
+- HP LaserJet Tank MFP 2603sdw
+- HP LaserJet Tank MFP 2604dw
+- HP LaserJet Tank MFP 2604sdw
+- HP LaserJet Tank MFP 2605sdw
+- HP LaserJet Tank MFP 2606dc
+- HP LaserJet Tank MFP 2606dn
+- HP LaserJet Tank MFP 2606dw
+- HP LaserJet Tank MFP 2606sdn
+- HP LaserJet Tank MFP 2606sdw
+- HP LaserJet x503
+- HP LaserJet x504
+- HP LaserJet x602
+- HP LaserJet x603
+
+#### HP OfficeJet
+
+- HP Officejet
+- HP Officejet 100 Mobile l411
+- HP Officejet 150 Mobile l511
+- HP officejet 200 mobile
+- HP Officejet 200 Mobile Series
+- HP officejet 250 mobile
+- HP Officejet 250 Mobile All-in-one
+- HP Officejet 250 Mobile Series
+- HP Officejet 250c Mobile All-in-one
+- HP Officejet 252 Mobile All-in-one
+- HP Officejet 252c Mobile All-in-one
+- HP Officejet 258 Mobile All-in-one
+- HP officejet 300
+- HP officejet 310
+- HP officejet 320
+- HP officejet 330
+- HP officejet 350
+- HP officejet 520
+- HP officejet 570
+- HP officejet 580
+- HP officejet 590
+- HP officejet 600
+- HP officejet 610
+- HP officejet 630
+- HP Officejet 630 All-in-one Printer
+- HP Officejet 635 All-in-one Printer
+- HP officejet 700
+- HP officejet 710
+- HP officejet 720
+- HP officejet 725
+- HP officejet 2620
+- HP Officejet 2620 All-in-one
+- HP Officejet 2620 Series
+- HP Officejet 2621 All-in-one
+- HP Officejet 2622 All-in-one
+- HP officejet 3830
+- HP Officejet 3830 All-in-one Printer
+- HP Officejet 3830 Series
+- HP Officejet 3832 All-in-one Printer
+- HP Officejet 3834 All-in-one Printer
+- HP Officejet 4000 k210
+- HP officejet 4100
+- HP Officejet 4100 All-in-one Printer
+- HP Officejet 4100 Series
+- HP Officejet 4105
+- HP Officejet 4110 All-in-one Printer
+- HP Officejet 4110v All-in-one Printer
+- HP Officejet 4110xi All-in-one Printer
+- HP officejet 4115
+- HP Officejet 4115 Series
+- HP officejet 4200
+- HP Officejet 4200 All-in-one Printer
+- HP Officejet 4200 Series
+- HP Officejet 4211 All-in-one Printer
+- HP Officejet 4212 All-in-one Printer
+- HP Officejet 4215 All-in-one Printer
+- HP Officejet 4215v All-in-one Printer
+- HP Officejet 4215xi All-in-one Printer
+- HP Officejet 4219 All-in-one Printer
+- HP Officejet 4251 All-in-one Printer
+- HP Officejet 4252 All-in-one Printer
+- HP Officejet 4255
+- HP Officejet 4255 All-in-one Printer
+- HP Officejet 4256 All-in-one Printer
+- HP Officejet 4259 All-in-one Printer
+- HP officejet 4300
+- HP Officejet 4300 Series
+- HP Officejet 4308 All-in-one Printer
+- HP Officejet 4311 All-in-one Printer
+- HP Officejet 4312 All-in-one Printer
+- HP Officejet 4314 All-in-one Printer
+- HP Officejet 4315 All-in-one Printer
+- HP Officejet 4315v All-in-one Printer
+- HP Officejet 4315xi All-in-one Printer
+- HP Officejet 4317 All-in-one Printer
+- HP Officejet 4319 All-in-one Printer
+- HP Officejet 4338 All-in-one Printer
+- HP Officejet 4352 All-in-one Printer
+- HP Officejet 4353 All-in-one Printer
+- HP Officejet 4355 All-in-one Printer
+- HP Officejet 4357 All-in-one Printer
+- HP Officejet 4359 All-in-one Printer
+- HP Officejet 4400 k410
+- HP Officejet 4500 All-in-one Desktop Printer - g510b
+- HP Officejet 4500 All-in-one Printer - g510g
+- HP Officejet 4500 All-in-one Printer - g510h
+- HP Officejet 4500 Desktop All-in-one Printer - g510a
+- HP Officejet 4500 g510a-f
+- HP Officejet 4500 g510g-m
+- HP Officejet 4500 g510n-z
+- HP Officejet 4500 k710
+- HP officejet 4610
+- HP Officejet 4610 Series
+- HP officejet 4620
+- HP Officejet 4620 E-all-in-one Printer
+- HP Officejet 4620 Series
+- HP Officejet 4622 E-all-in-one Printer
+- HP officejet 4630
+- HP Officejet 4630 E-all-in-one Printer
+- HP Officejet 4630 Series
+- HP Officejet 4631 E-all-in-one Printer
+- HP Officejet 4632 E-all-in-one Printer
+- HP Officejet 4634 E-all-in-one Printer
+- HP Officejet 4635 E-all-in-one Printer
+- HP Officejet 4636 E-all-in-one Printer
+- HP officejet 4650
+- HP Officejet 4650 All-in-one Printer
+- HP Officejet 4650 Series
+- HP Officejet 4652 All-in-one Printer
+- HP Officejet 4654 All-in-one Printer
+- HP Officejet 4655 All-in-one Printer
+- HP officejet 5100
+- HP Officejet 5100 All-in-one Printer
+- HP Officejet 5100 Series
+- HP Officejet 5105 All-in-one Printer
+- HP Officejet 5110 All-in-one Printer
+- HP Officejet 5110v All-in-one Printer
+- HP Officejet 5110xi All-in-one Printer
+- HP officejet 5200
+- HP Officejet 5200 All-in-one
+- HP Officejet 5200 Series
+- HP Officejet 5220 All-in-one
+- HP Officejet 5230 All-in-one
+- HP Officejet 5232 All-in-one
+- HP officejet 5500
+- HP Officejet 5500 Series
+- HP Officejet 5505 All-in-one Printer
+- HP Officejet 5508 All-in-one Printer
+- HP Officejet 5510 All-in-one Printer
+- HP Officejet 5510v All-in-one Printer
+- HP Officejet 5510xi All-in-one Printer
+- HP Officejet 5515 All-in-one Printer
+- HP officejet 5600
+- HP Officejet 5600 All-in-one Printer
+- HP Officejet 5600 Series
+- HP Officejet 5605 All-in-one Printer
+- HP Officejet 5607 All-in-one Printer
+- HP Officejet 5608 All-in-one Printer
+- HP Officejet 5609 All-in-one Printer
+- HP Officejet 5610 All-in-one Printer
+- HP Officejet 5610v All-in-one Printer
+- HP Officejet 5610xi All-in-one Printer
+- HP Officejet 5615 All-in-one Printer
+- HP Officejet 5679 All-in-one Printer
+- HP Officejet 5680 All-in-one Printer
+- HP officejet 5740
+- HP Officejet 5740 E-all-in-one
+- HP Officejet 5740 Series
+- HP Officejet 5742 E-all-in-one
+- HP Officejet 5744 E-all-in-one
+- HP Officejet 5745 E-all-in-one
+- HP Officejet 6000 e609a
+- HP Officejet 6000 e609n
+- HP Officejet 6100
+- HP Officejet 6100 Series
+- HP Officejet 6105 All-in-one Printer
+- HP Officejet 6110 All-in-one Printer
+- HP Officejet 6110v All-in-one Printer
+- HP Officejet 6110xi All-in-one Printer
+- HP officejet 6150
+- HP Officejet 6150 Series
+- HP officejet 6200
+- HP Officejet 6200 All-in-one Printer
+- HP Officejet 6200 Series
+- HP Officejet 6203 All-in-one Printer
+- HP Officejet 6205 All-in-one Printer
+- HP Officejet 6208 All-in-one Printer
+- HP Officejet 6210 All-in-one Printer
+- HP Officejet 6210v All-in-one Printer
+- HP Officejet 6210xi All-in-one Printer
+- HP Officejet 6213 All-in-one Printer
+- HP Officejet 6215 All-in-one Printer
+- HP officejet 6300
+- HP Officejet 6300 Series
+- HP Officejet 6301 All-in-one Printer
+- HP Officejet 6304 All-in-one Printer
+- HP Officejet 6305 All-in-one Printer
+- HP Officejet 6307 All-in-one Printer
+- HP Officejet 6308 All-in-one Printer
+- HP Officejet 6310 All-in-one Printer
+- HP Officejet 6310v All-in-one Printer
+- HP Officejet 6310xi All-in-one Printer
+- HP Officejet 6313 All-in-one Printer
+- HP Officejet 6315 All-in-one Printer
+- HP Officejet 6318 All-in-one Printer
+- HP Officejet 6500 All-in-one Printer - e709a
+- HP Officejet 6500 All-in-one Printer - e709c
+- HP Officejet 6500 e709a
+- HP Officejet 6500 e709n
+- HP Officejet 6500 e710a-f
+- HP Officejet 6500 e710n-z
+- HP Officejet 6500 Wireless All-in-one Printer - e709n
+- HP Officejet 6500 Wireless All-in-one Printer - e709q
+- HP Officejet 6600
+- HP Officejet 6700
+- HP Officejet 6800
+- HP Officejet 6800 E-all-in-one
+- HP Officejet 6810 E-all-in-one Printer
+- HP Officejet 6812 E-all-in-one Printer
+- HP Officejet 6815 E-all-in-one Printer
+- HP Officejet 6820 E-all-in-one Printer
+- HP Officejet 6950
+- HP Officejet 6960
+- HP Officejet 7000 e809
+- HP Officejet 7000 e809 Printer
+- HP officejet 7000 e809a
+- HP Officejet 7000 e809a Series
+- HP Officejet 7000 Wide Format Printer -e809a
+- HP officejet 7100
+- HP Officejet 7100 All-in-one Printer
+- HP Officejet 7100 Series
+- HP officejet 7110
+- HP Officejet 7110 All-in-one Printer
+- HP Officejet 7110 Series
+- HP Officejet 7110xi All-in-one Printer
+- HP Officejet 7115 All-in-one Printer
+- HP Officejet 7130 All-in-one Printer
+- HP Officejet 7130xi All-in-one Printer
+- HP Officejet 7135xi All-in-one Printer
+- HP Officejet 7140xi All-in-one Printer
+- HP officejet 7200
+- HP Officejet 7200 Series
+- HP Officejet 7205 All-in-one Printer
+- HP Officejet 7208 All-in-one Printer
+- HP Officejet 7210 All-in-one Printer
+- HP Officejet 7210v All-in-one Printer
+- HP Officejet 7210xi All-in-one Printer
+- HP Officejet 7213 All-in-one Printer
+- HP Officejet 7215 All-in-one Printer
+- HP officejet 7300
+- HP Officejet 7300 Series
+- HP Officejet 7310 All-in-one Printer
+- HP Officejet 7310xi All-in-one Printer
+- HP Officejet 7313 All-in-one Printer
+- HP officejet 7400
+- HP Officejet 7400 Series
+- HP Officejet 7408 All-in-one Printer
+- HP Officejet 7410 All-in-one Printer
+- HP Officejet 7410xi All-in-one Printer
+- HP Officejet 7413 All-in-one Printer
+- HP Officejet 7500 e910
+- HP officejet 7510
+- HP Officejet 7510 Series
+- HP officejet 7610
+- HP Officejet 7610 Series
+- HP Officejet 7610 Wide Format E-all-in-one Printer
+- HP Officejet 7612 Wide Format E-all-in-one Printer
+- HP officejet 8010
+- HP Officejet 8010 Series
+- HP officejet 8020
+- HP Officejet 8020 Series
+- HP officejet 8040
+- HP Officejet 8040 Series
+- HP officejet 8120
+- HP Officejet 8120 Series
+- HP officejet 8120e
+- HP Officejet 8120e Series
+- HP officejet 8130
+- HP Officejet 8130 Series
+- HP officejet 8130e
+- HP Officejet 8130e Series
+- HP Officejet 8700
+- HP officejet 9010
+- HP Officejet 9010 Series
+- HP officejet 9100
+- HP Officejet 9100 Series
+- HP Officejet 9110 All-in-one Printer
+- HP officejet 9120
+- HP Officejet 9120 All-in-one Printer
+- HP Officejet 9120 Series
+- HP officejet 9120e
+- HP Officejet 9120e Series
+- HP Officejet 9130 All-in-one Printer
+- HP Officejet Color FlowMFP X585
+- HP Officejet Color MFP X585
+- HP Officejet Color X555
+- HP officejet d
+- HP Officejet d125xi All-in-one Printer
+- HP Officejet d135 All-in-one Printer
+- HP Officejet d135xi All-in-one Printer
+- HP Officejet d145 All-in-one Printer
+- HP Officejet d145xi All-in-one Printer
+- HP Officejet d155xi All-in-one Printer
+- HP Officejet D Series
+- HP Officejet g55
+- HP Officejet g55xi
+- HP Officejet g85
+- HP Officejet g85xi
+- HP Officejet g95
+- HP Officejet h470
+- HP Officejet h470 Mobile Printer
+- HP Officejet h470bt Mobile Printer
+- HP Officejet h470wbt Mobile Printer
+- HP Officejet h470wf Mobile Printer
+- HP officejet j3500
+- HP Officejet j3500 Series
+- HP officejet j3600
+- HP Officejet j3600 Series
+- HP Officejet j3608 All-in-one Printer
+- HP Officejet j3625 All-in-one Printer
+- HP Officejet j3635 All-in-one Printer
+- HP Officejet j3640 All-in-one Printer
+- HP Officejet j3650 All-in-one Printer
+- HP Officejet j3680 All-in-one Printer
+- HP officejet j4500
+- HP Officejet j4500 Series
+- HP Officejet j4524 All-in-one Printer
+- HP Officejet j4525 All-in-one Printer
+- HP Officejet j4535 All-in-one Printer
+- HP Officejet j4540 All-in-one Printer
+- HP Officejet j4550 All-in-one Printer
+- HP Officejet j4560 All-in-one Printer
+- HP Officejet j4580 All-in-one Printer
+- HP Officejet j4580c All-in-one Printer
+- HP Officejet j4585 All-in-one Printer
+- HP officejet j4660
+- HP Officejet j4660 Series
+- HP officejet j4680
+- HP Officejet j4680 All-in-one Printer
+- HP Officejet j4680 Series
+- HP Officejet j4680c All-in-one Printer
+- HP officejet j5500
+- HP Officejet j5500 Series
+- HP Officejet j5505 All-in-one Printer
+- HP Officejet j5508 All-in-one Printer
+- HP Officejet j5510 All-in-one Printer
+- HP Officejet j5510v All-in-one Printer
+- HP Officejet j5510xi All-in-one Printer
+- HP Officejet j5515 All-in-one Printer
+- HP Officejet j5520 All-in-one Printer
+- HP officejet j5700
+- HP Officejet j5700 Series
+- HP Officejet j5725 All-in-one Printer
+- HP Officejet j5730 All-in-one Printer
+- HP Officejet j5735 All-in-one Printer
+- HP Officejet j5738 All-in-one Printer
+- HP Officejet j5740 All-in-one Printer
+- HP Officejet j5750 All-in-one Printer
+- HP Officejet j5780 All-in-one Printer
+- HP Officejet j5783 All-in-one Printer
+- HP Officejet j5785 All-in-one Printer
+- HP Officejet j5788 All-in-one Printer
+- HP Officejet j5790 All-in-one Printer
+- HP officejet j6400
+- HP Officejet j6400 Series
+- HP Officejet j6405 All-in-one Printer
+- HP Officejet j6410 All-in-one Printer
+- HP Officejet j6413 All-in-one Printer
+- HP Officejet j6415 All-in-one Printer
+- HP Officejet j6424 All-in-one Printer
+- HP Officejet j6450 All-in-one Printer
+- HP Officejet j6480 All-in-one Printer
+- HP Officejet j6488 All-in-one Printer
+- HP Officejet k60
+- HP Officejet k60xi
+- HP Officejet k80
+- HP Officejet k80xi
+- HP Officejet k7100
+- HP Officejet k7100 Printer
+- HP Officejet k7103 Printer
+- HP Officejet k7108 Printer
+- HP Officejet Lx
+- HP Officejet Pro 251dw Printer
+- HP Officejet Pro 276dw MFP
+- HP Officejet Pro 1150c
+- HP Officejet Pro 1150c All-in-one Printer
+- HP Officejet Pro 1150cse All-in-one Printer
+- HP officejet pro 1170c
+- HP Officejet Pro 1170c All-in-one Printer
+- HP Officejet Pro 1170c Series
+- HP Officejet Pro 1170cse All-in-one Printer
+- HP Officejet Pro 1170cxi All-in-one Printer
+- HP Officejet Pro 1175c All-in-one Printer
+- HP Officejet Pro 1175cse All-in-one Printer
+- HP Officejet Pro 1175cxi All-in-one Printer
+- HP Officejet Pro 3610
+- HP Officejet Pro 3620
+- HP Officejet Pro 6230
+- HP Officejet Pro 6830
+- HP Officejet Pro 6830 E-all-in-one
+- HP Officejet Pro 6835 E-all-in-one
+- HP Officejet Pro 6960
+- HP Officejet Pro 6960 All-in-one
+- HP Officejet Pro 6968 All-in-one
+- HP Officejet Pro 6970
+- HP Officejet Pro 6970 All-in-one
+- HP Officejet Pro 6975 All-in-one
+- HP Officejet Pro 6978 All-in-one
+- HP officejet pro 7720
+- HP Officejet Pro 7720 Series
+- HP officejet pro 7730
+- HP Officejet Pro 7730 Series
+- HP officejet pro 7740
+- HP Officejet Pro 7740 Series
+- HP Officejet Pro 8000 a809
+- HP Officejet Pro 8000 A811a
+- HP Officejet Pro 8000 Enterprise A811a
+- HP Officejet Pro 8000 Printer - a809a
+- HP Officejet Pro 8000 Wireless Printer - a809n
+- HP officejet pro 8020
+- HP Officejet Pro 8020 Series
+- HP officejet pro 8030
+- HP Officejet Pro 8030 Series
+- HP Officejet Pro 8100
+- HP officejet pro 8120
+- HP Officejet Pro 8120 Series
+- HP officejet pro 8120e
+- HP Officejet Pro 8120e Series
+- HP officejet pro 8130
+- HP Officejet Pro 8130 Series
+- HP officejet pro 8130e
+- HP Officejet Pro 8130e Series
+- HP OfficeJet Pro 8210
+- HP Officejet Pro 8500 a909a
+- HP Officejet Pro 8500 a909g
+- HP Officejet Pro 8500 a909n
+- HP Officejet Pro 8500 a910
+- HP Officejet Pro 8500a E-aio Printer - a910a
+- HP Officejet Pro 8500a Plus E-aio Printer - a910g
+- HP Officejet Pro 8500a Premium E-aio Printer - a910n
+- HP Officejet Pro 8600
+- HP Officejet Pro 8600 E-aio n911a
+- HP Officejet Pro 8600 Plus E-aio n911g
+- HP Officejet Pro 8600 Premium E-aio n911n
+- HP Officejet Pro 8610
+- HP Officejet Pro 8610 E-all-in-one Printer
+- HP Officejet Pro 8615 E-all-in-one Printer
+- HP Officejet Pro 8616 E-all-in-one Printer
+- HP Officejet Pro 8620
+- HP Officejet Pro 8620 E-all-in-one Printer
+- HP Officejet Pro 8625 E-all-in-one Printer
+- HP Officejet Pro 8630
+- HP Officejet Pro 8640
+- HP Officejet Pro 8660
+- HP Officejet Pro 8710
+- HP Officejet Pro 8710 All-in-one Printer
+- HP Officejet Pro 8715 All-in-one Printer
+- HP Officejet Pro 8720
+- HP Officejet Pro 8720 All-in-one Printer
+- HP Officejet Pro 8725 All-in-one Printer
+- HP OfficeJet Pro 8730
+- HP OfficeJet Pro 8732M
+- HP OfficeJet Pro 8740
+- HP officejet pro 9010
+- HP Officejet Pro 9010 Series
+- HP officejet pro 9020
+- HP Officejet Pro 9020 Series
+- HP officejet pro 9110
+- HP Officejet Pro 9110 Series
+- HP officejet pro 9110b
+- HP Officejet Pro 9110b Series
+- HP officejet pro 9110e
+- HP Officejet Pro 9110e Series
+- HP officejet pro 9120
+- HP Officejet Pro 9120 Series
+- HP officejet pro 9120b
+- HP Officejet Pro 9120b Series
+- HP officejet pro 9120e
+- HP Officejet Pro 9120e Series
+- HP officejet pro 9130
+- HP Officejet Pro 9130 Series
+- HP officejet pro 9130b
+- HP Officejet Pro 9130b Series
+- HP officejet pro 9130e
+- HP Officejet Pro 9130e Series
+- HP officejet pro 9720
+- HP Officejet Pro 9720 Series
+- HP officejet pro 9720e
+- HP Officejet Pro 9720e Series
+- HP officejet pro 9730
+- HP Officejet Pro 9730 Series
+- HP officejet pro 9730e
+- HP Officejet Pro 9730e Series
+- HP Officejet Pro k550
+- HP Officejet Pro k550 Printer
+- HP Officejet Pro k550dtn Printer
+- HP Officejet Pro k550dtwn Printer
+- HP Officejet Pro k550xi Printer
+- HP Officejet Pro k850
+- HP Officejet Pro k850 Printer
+- HP Officejet Pro k850dn Printer
+- HP Officejet Pro k5300
+- HP Officejet Pro k5400
+- HP Officejet Pro k5400 Printer
+- HP Officejet Pro k5400dn Printer
+- HP Officejet Pro k5400dtn Printer
+- HP Officejet Pro k5400n Printer
+- HP Officejet Pro k5400z Printer
+- HP Officejet Pro k8600
+- HP Officejet Pro k8600 Color Printer
+- HP Officejet Pro k8600dn Color Printer
+- HP Officejet Pro l7300
+- HP Officejet Pro l7300 All-in-one Printer
+- HP Officejet Pro l7380 All-in-one Printer
+- HP Officejet Pro l7400
+- HP Officejet Pro l7500
+- HP Officejet Pro l7500 All-in-one Printer
+- HP Officejet Pro l7550 All-in-one Printer
+- HP Officejet Pro l7555 All-in-one Printer
+- HP Officejet Pro l7580 All-in-one Printer
+- HP Officejet Pro l7590 All-in-one Printer
+- HP Officejet Pro l7600
+- HP Officejet Pro l7600 All-in-one Printer
+- HP Officejet Pro l7650 All-in-one Printer
+- HP Officejet Pro l7680 All-in-one Printer
+- HP Officejet Pro l7681 All-in-one Printer
+- HP Officejet Pro l7700
+- HP Officejet Pro l7700 All-in-one Printer
+- HP Officejet Pro l7710 All-in-one Printer
+- HP Officejet Pro l7750 All-in-one Printer
+- HP Officejet Pro l7780 All-in-one Printer
+- HP Officejet Pro X451-X551 Printer
+- HP Officejet Pro X451dn Printer
+- HP Officejet Pro X451dw Printer
+- HP Officejet Pro X476-X576 MFP
+- HP Officejet Pro X476dn MFP
+- HP Officejet Pro X476dw MFP
+- HP Officejet Pro X551dw Printer
+- HP Officejet Pro X576dw MFP
+- HP Officejet r40
+- HP Officejet r40xi
+- HP Officejet r45
+- HP Officejet r60
+- HP Officejet r65
+- HP Officejet r80
+- HP Officejet r80xi
+- HP Officejet Series 300
+- HP Officejet Series 310
+- HP Officejet Series 320
+- HP Officejet Series 330
+- HP Officejet Series 350
+- HP Officejet Series 520
+- HP Officejet Series 570
+- HP Officejet Series 580
+- HP Officejet Series 590
+- HP Officejet Series 600
+- HP Officejet Series 610
+- HP Officejet Series 630
+- HP Officejet Series 700
+- HP Officejet Series 710
+- HP Officejet Series 720
+- HP Officejet Series 725
+- HP officejet t
+- HP Officejet t45 All-in-one Printer
+- HP Officejet t45xi All-in-one Printer
+- HP Officejet t65 All-in-one Printer
+- HP Officejet t65xi All-in-one Printer
+- HP Officejet T Series
+- HP Officejet v30
+- HP Officejet v40
+- HP Officejet v40 All-in-one Printer
+- HP Officejet v40s All-in-one Printer
+- HP Officejet v40xi
+- HP Officejet v45
+
+#### HP PageWide
+
+- HP PageWide Color 556
+- HP PageWide Color 755
+- HP PageWide Color 765
+- HP PageWide Color E55650
+- HP PageWide Color E75160
+- HP PageWide Color E77650-E77660
+- HP PageWide Color Flow MFP 586
+- HP PageWide Color Flow MFP 785
+- HP PageWide Color MFP 586
+- HP PageWide Color MFP 774
+- HP PageWide Color MFP 774 779
+- HP PageWide Color MFP 779
+- HP PageWide Color MFP 780
+- HP PageWide Color MFP 780-785
+- HP PageWide Color MFP E58650
+- HP PageWide Color MFP E77650
+- HP PageWide Color MFP E77660
+- HP PageWide Color MFP P77440
+- HP PageWide Color MFP P77940
+- HP PageWide Color MFP P77950
+- HP PageWide Color MFP P77960
+- HP PageWide Color P75250
+- HP PageWide Flow MFP E77650
+- HP PageWide Flow MFP E77660
+- HP PageWide MFP P57750
+- HP PageWide MFP P77740-60zs
+- HP PageWide P55250
+- HP PageWide P75050-60
+- HP PageWide P77440 P77940-60
+- HP PageWide Pro 352 Printer
+- HP PageWide Pro 352dn Printer
+- HP PageWide Pro 352dw Printer
+- HP PageWide Pro 377 MFP
+- HP PageWide Pro 377dn MFP
+- HP PageWide Pro 377dw MFP
+- HP PageWide Pro 452 Printer
+- HP PageWide Pro 452dn Printer
+- HP PageWide Pro 452dw Printer
+- HP PageWide Pro 477 MFP
+- HP PageWide Pro 477dn MFP
+- HP PageWide Pro 477dw MFP
+- HP PageWide Pro 552 Printer
+- HP PageWide Pro 577 MFP
+- HP PageWide Pro 750
+- HP PageWide Pro MFP 772-777
+- HP PageWide XL 3920 PS MFP
+- HP PageWide XL 3920 PS MFP (40'' sized)
+- HP PageWide XL 4000PS
+- HP PageWide XL 4000PS (40'' sized)
+- HP PageWide XL 4000PS MFP
+- HP PageWide XL 4000PS MFP (40'' sized)
+- HP PageWide XL 4200 PS
+- HP PageWide XL 4200 PS (40'' sized)
+- HP PageWide XL 4200 PS MFP
+- HP PageWide XL 4200 PS MFP (40'' sized)
+- HP PageWide XL 4200 PS MFP series
+- HP PageWide XL 4200 PS series
+- HP PageWide XL 4500PS
+- HP PageWide XL 4500PS (40'' sized)
+- HP PageWide XL 4500PS MFP
+- HP PageWide XL 4500PS MFP (40'' sized)
+- HP PageWide XL 4700 PS
+- HP PageWide XL 4700 PS (40'' sized)
+- HP PageWide XL 4700 PS MFP
+- HP PageWide XL 4700 PS MFP (40'' sized)
+- HP PageWide XL 4700 PS MFP series
+- HP PageWide XL 4700 PS series
+- HP PageWide XL 5000PS
+- HP PageWide XL 5000PS (40'' sized)
+- HP PageWide XL 5000PS Blueprinter
+- HP PageWide XL 5000PS Blueprinter (40'' sized)
+- HP PageWide XL 5000PS MFP
+- HP PageWide XL 5000PS MFP (40'' sized)
+- HP PageWide XL 5100PS
+- HP PageWide XL 5100PS (40'' sized)
+- HP PageWide XL 5100PS MFP
+- HP PageWide XL 5100PS MFP (40'' sized)
+- HP PageWide XL 5100PS MFP Blueprinter
+- HP PageWide XL 5100PS MFP Blueprinter (40'' sized)
+- HP PageWide XL 5200 PS
+- HP PageWide XL 5200 PS (40'' sized)
+- HP PageWide XL 5200 PS MFP
+- HP PageWide XL 5200 PS MFP (40'' sized)
+- HP PageWide XL 5200 PS MFP series
+- HP PageWide XL 5200 PS series
+- HP PageWide XL 6000PS
+- HP PageWide XL 6000PS (40'' sized)
+- HP PageWide XL 6000PS MFP
+- HP PageWide XL 6000PS MFP (40'' sized)
+- HP PageWide XL 8000PS
+- HP PageWide XL 8000PS (40'' sized)
+- HP PageWide XL 8000PS Blueprinter
+- HP PageWide XL 8000PS Blueprinter (40'' sized)
+- HP PageWide XL 8200 PS
+- HP PageWide XL 8200 PS (40'' sized)
+- HP PageWide XL 8200 PS series
+- HP PageWide XL Pro 5200 PS MFP
+- HP PageWide XL Pro 5200 PS MFP (40'' sized)
+- HP PageWide XL Pro 5200 PS MFP series
+- HP PageWide XL Pro 8200 PS MFP
+- HP PageWide XL Pro 8200 PS MFP (40'' sized)
+- HP PageWide XL Pro 8200 PS MFP series
+
+#### HP Photosmart
+
+- HP Photosmart 100
+- HP Photosmart 130
+- HP Photosmart 130 Printer
+- HP Photosmart 130v Printer
+- HP Photosmart 130xi Printer
+- HP photosmart 140
+- HP Photosmart 140 Compact Photo Printer
+- HP Photosmart 140 Series
+- HP Photosmart 145 Compact Photo Printer
+- HP Photosmart 145v Compact Photo Printer
+- HP Photosmart 145xi Compact Photo Printer
+- HP Photosmart 148 Compact Photo Printer
+- HP Photosmart 230
+- HP Photosmart 230 Printer
+- HP Photosmart 230v Printer
+- HP Photosmart 230xi Printer
+- HP photosmart 240
+- HP Photosmart 240 Compact Photo Printer
+- HP Photosmart 240 Series
+- HP Photosmart 245 Compact Photo Printer
+- HP Photosmart 245v Compact Photo Printer
+- HP Photosmart 245xi Compact Photo Printer
+- HP photosmart 320
+- HP Photosmart 320 Compact Photo Printer
+- HP Photosmart 320 Series
+- HP Photosmart 325 Compact Photo Printer
+- HP Photosmart 325v Compact Photo Printer
+- HP Photosmart 325xi Compact Photo Printer
+- HP Photosmart 329 Compact Photo Printer
+- HP photosmart 330
+- HP Photosmart 330 Compact Photo Printer
+- HP Photosmart 330 Series
+- HP Photosmart 335 Compact Photo Printer
+- HP Photosmart 335v Compact Photo Printer
+- HP Photosmart 335xi Compact Photo Printer
+- HP Photosmart 337 Compact Photo Printer
+- HP Photosmart 338 Compact Photo Printer
+- HP photosmart 370
+- HP Photosmart 370 Compact Photo Printer
+- HP Photosmart 370 Series
+- HP Photosmart 375 Compact Photo Printer
+- HP Photosmart 375b Compact Photo Printer With Battery
+- HP Photosmart 375bxi Compact Photo Printer With Battery
+- HP Photosmart 375v Compact Photo Printer
+- HP Photosmart 375xi Compact Photo Printer
+- HP photosmart 380
+- HP Photosmart 380 Series
+- HP Photosmart 385 Compact Photo Printer
+- HP Photosmart 385v Compact Photo Printer
+- HP Photosmart 385xi Compact Photo Printer
+- HP photosmart 420
+- HP Photosmart 420 Compact Photo Printer
+- HP Photosmart 420 Series
+- HP Photosmart 422 Compact Photo Printer
+- HP Photosmart 422v Compact Photo Printer
+- HP Photosmart 422xi Compact Photo Printer
+- HP Photosmart 425 Compact Photo Printer
+- HP Photosmart 425v Compact Photo Printer
+- HP Photosmart 428 Compact Photo Printer
+- HP Photosmart 428v Compact Photo Printer
+- HP Photosmart 428xi Compact Photo Printer
+- HP photosmart 470
+- HP Photosmart 470 Compact Photo Printer
+- HP Photosmart 470 Series
+- HP Photosmart 475 Compact Photo Printer
+- HP Photosmart 475v Compact Photo Printer
+- HP Photosmart 475xi Compact Photo Printer
+- HP Photosmart 1115
+- HP Photosmart 1215
+- HP Photosmart 1215 Printer
+- HP Photosmart 1215vm Printer
+- HP Photosmart 1218
+- HP Photosmart 1218 Printer
+- HP Photosmart 1218xi Printer
+- HP Photosmart 1315
+- HP photosmart 2570
+- HP Photosmart 2570 All-in-one Printer
+- HP Photosmart 2570 Series
+- HP Photosmart 2571 All-in-one Printer
+- HP Photosmart 2573 All-in-one Printer
+- HP Photosmart 2574 All-in-one Printer
+- HP Photosmart 2575 All-in-one Printer
+- HP Photosmart 2575a All-in-one Printer
+- HP Photosmart 2575v All-in-one Printer
+- HP Photosmart 2575xi All-in-one Printer
+- HP Photosmart 2578 All-in-one Printer
+- HP photosmart 2600
+- HP Photosmart 2600 Series
+- HP Photosmart 2605 All-in-one Printer
+- HP Photosmart 2608 All-in-one Printer
+- HP Photosmart 2610 All-in-one Printer
+- HP Photosmart 2610v All-in-one Printer
+- HP Photosmart 2610xi All-in-one Printer
+- HP Photosmart 2613 All-in-one Printer
+- HP Photosmart 2615 All-in-one Printer
+- HP photosmart 2700
+- HP Photosmart 2700 Series
+- HP Photosmart 2710 All-in-one Printer
+- HP Photosmart 2710xi All-in-one Printer
+- HP Photosmart 2713 All-in-one Printer
+- HP photosmart 3100
+- HP Photosmart 3100 Series
+- HP Photosmart 3108 All-in-one Printer
+- HP Photosmart 3110 All-in-one Printer
+- HP Photosmart 3110v All-in-one Printer
+- HP photosmart 3200
+- HP Photosmart 3200 Series
+- HP Photosmart 3207 All-in-one Printer
+- HP Photosmart 3210 All-in-one Printer
+- HP Photosmart 3210a All-in-one Printer
+- HP Photosmart 3210v All-in-one Printer
+- HP Photosmart 3210xi All-in-one Printer
+- HP Photosmart 3213 All-in-one Printer
+- HP Photosmart 3214 All-in-one Printer
+- HP photosmart 3300
+- HP Photosmart 3300 Series
+- HP Photosmart 3308 All-in-one Printer
+- HP Photosmart 3310 All-in-one Printer
+- HP Photosmart 3310xi All-in-one Printer
+- HP Photosmart 3313 All-in-one Printer
+- HP Photosmart 3314 All-in-one Printer
+- HP photosmart 5510
+- HP Photosmart 5510 Series
+- HP photosmart 5510d
+- HP Photosmart 5510d Series
+- HP photosmart 5520
+- HP Photosmart 5520 E-all-in-one
+- HP Photosmart 5520 Series
+- HP Photosmart 5521 E-all-in-one Printer
+- HP Photosmart 5522 E-all-in-one Printer
+- HP Photosmart 5524 E-all-in-one Printer
+- HP Photosmart 5525 E-all-in-one Printer
+- HP photosmart 6510
+- HP Photosmart 6510 Series
+- HP photosmart 6520
+- HP Photosmart 6520 Series
+- HP Photosmart 6525 E All-in-one
+- HP photosmart 7200
+- HP Photosmart 7200 Series
+- HP Photosmart 7260 Photo Printer
+- HP Photosmart 7260v Photo Printer
+- HP Photosmart 7260w Photo Printer
+- HP Photosmart 7268 Photo Printer
+- HP Photosmart 7345
+- HP photosmart 7400
+- HP Photosmart 7400 Series
+- HP Photosmart 7450 Photo Printer
+- HP Photosmart 7450v Photo Printer
+- HP Photosmart 7450xi Photo Printer
+- HP Photosmart 7458 Photo Printer
+- HP Photosmart 7459 Photo Printer
+- HP photosmart 7510
+- HP Photosmart 7510 Series
+- HP photosmart 7520
+- HP Photosmart 7520 E-all-in-one
+- HP Photosmart 7520 Series
+- HP Photosmart 7525 E-all-in-one
+- HP Photosmart 7550
+- HP Photosmart 7550 Printer
+- HP Photosmart 7550v Printer
+- HP Photosmart 7550w Printer
+- HP photosmart 7600
+- HP Photosmart 7600 Series
+- HP Photosmart 7655 Photo Printer
+- HP Photosmart 7660 Photo Printer
+- HP photosmart 7700
+- HP Photosmart 7700 Series
+- HP Photosmart 7755 Photo Printer
+- HP Photosmart 7760 Photo Printer
+- HP Photosmart 7760od Photo Printer
+- HP Photosmart 7760v Photo Printer
+- HP Photosmart 7760w Photo Printer
+- HP Photosmart 7762 Photo Printer
+- HP Photosmart 7762w Photo Printer
+- HP photosmart 7800
+- HP Photosmart 7800 Series
+- HP Photosmart 7830 Printer
+- HP Photosmart 7838 Printer
+- HP Photosmart 7850 Printer
+- HP Photosmart 7850v Printer
+- HP Photosmart 7850vxi Printer
+- HP Photosmart 7853 Printer
+- HP photosmart 7900
+- HP Photosmart 7900 Series
+- HP Photosmart 7960 Photo Printer
+- HP Photosmart 7960gp Photo Printer
+- HP Photosmart 7960v Photo Printer
+- HP Photosmart 7960w Photo Printer
+- HP photosmart 8000
+- HP Photosmart 8000 Series
+- HP Photosmart 8030 Printer
+- HP Photosmart 8038 Printer
+- HP Photosmart 8049 Printer
+- HP Photosmart 8050 Printer
+- HP Photosmart 8050v Printer
+- HP Photosmart 8050xi Printer
+- HP Photosmart 8053 Printer
+- HP photosmart 8100
+- HP Photosmart 8100 Series
+- HP Photosmart 8150 Photo Printer
+- HP Photosmart 8150v Photo Printer
+- HP Photosmart 8150xi Photo Printer
+- HP Photosmart 8153 Photo Printer
+- HP Photosmart 8158 Photo Printer
+- HP photosmart 8200
+- HP Photosmart 8200 Series
+- HP Photosmart 8230 Printer
+- HP Photosmart 8238 Printer
+- HP Photosmart 8250 Printer
+- HP Photosmart 8250v Printer
+- HP Photosmart 8250xi Printer
+- HP Photosmart 8253 Printer
+- HP photosmart 8400
+- HP Photosmart 8400 Series
+- HP Photosmart 8450 Photo Printer
+- HP Photosmart 8450gp Photo Printer
+- HP Photosmart 8450v Photo Printer
+- HP Photosmart 8450xi Photo Printer
+- HP Photosmart 8453 Photo Printer
+- HP Photosmart 8458 Photo Printer
+- HP photosmart 8700
+- HP Photosmart 8700 Series
+- HP Photosmart 8750 Professional Photo Printer
+- HP Photosmart 8750gp Professional Photo Printer
+- HP Photosmart 8750xi Professional Photo Printer
+- HP Photosmart 8753 Professional Photo Printer
+- HP Photosmart 8758 Professional Photo Printer
+- HP photosmart a310
+- HP Photosmart a310 Compact Photo Printer
+- HP Photosmart a310 Series
+- HP Photosmart a311 Compact Photo Printer
+- HP Photosmart a314 Compact Photo Printer
+- HP Photosmart a316 Compact Photo Printer
+- HP photosmart a320
+- HP Photosmart a320 Compact Photo Printer
+- HP Photosmart a320 Series
+- HP Photosmart a321 Compact Photo Printer
+- HP photosmart a430
+- HP Photosmart a430 Compact Photo Printer
+- HP Photosmart a430 Series
+- HP Photosmart a432 Compact Photo Printer
+- HP Photosmart a433 Compact Photo Printer
+- HP Photosmart a434 Compact Photo Printer
+- HP Photosmart a436 Compact Photo Printer
+- HP photosmart a440
+- HP Photosmart a440 Compact Photo Printer
+- HP Photosmart a440 Series
+- HP Photosmart a442 Compact Photo Printer
+- HP Photosmart a446 Compact Photo Printer
+- HP photosmart a510
+- HP Photosmart a510 Compact Photo Printer
+- HP Photosmart a510 Series
+- HP Photosmart a512 Compact Photo Printer
+- HP Photosmart a516 Compact Photo Printer
+- HP photosmart a520
+- HP Photosmart a520 Series
+- HP Photosmart a522 Compact Photo Printer
+- HP Photosmart a522xi Compact Photo Printer
+- HP Photosmart a525 Compact Photo Printer
+- HP Photosmart a526 Compact Photo Printer
+- HP Photosmart a528 Compact Photo Printer
+- HP photosmart a530
+- HP Photosmart a530 Series
+- HP Photosmart a532 Compact Photo Printer
+- HP Photosmart a536 Compact Photo Printer
+- HP Photosmart a538 Compact Photo Printer
+- HP photosmart a610
+- HP Photosmart a610 Compact Photo Printer
+- HP Photosmart a610 Series
+- HP Photosmart a612 Compact Photo Printer
+- HP Photosmart a616 Compact Photo Printer
+- HP Photosmart a617 Compact Photo Printer
+- HP Photosmart a618 Compact Photo Printer
+- HP photosmart a620
+- HP Photosmart a620 Compact Photo Printer
+- HP Photosmart a620 Series
+- HP Photosmart a622 Compact Photo Printer
+- HP Photosmart a626 Compact Photo Printer
+- HP Photosmart a627 Compact Photo Printer
+- HP Photosmart a628 Compact Photo Printer
+- HP photosmart a630
+- HP Photosmart a630 Series
+- HP Photosmart a636 Compact Photo Printer
+- HP Photosmart a637 Compact Photo Printer
+- HP photosmart a640
+- HP Photosmart a640 Series
+- HP photosmart a710
+- HP Photosmart a710 Series
+- HP Photosmart a712 Compact Photo Printer
+- HP Photosmart a716 Compact Photo Printer
+- HP Photosmart a717 Compact Photo Printer
+- HP photosmart a820
+- HP Photosmart a820 Series
+- HP Photosmart a826 Home Photo Center
+- HP Photosmart a827 Home Photo Center
+- HP Photosmart a828 Home Photo Center
+- HP photosmart b010
+- HP Photosmart b010 Series
+- HP photosmart b109a
+- HP Photosmart b109a Series
+- HP photosmart b110
+- HP Photosmart b110 Series
+- HP photosmart b8500
+- HP Photosmart b8500 Series
+- HP Photosmart b8550 Photo Printer
+- HP Photosmart b8553 Photo Printer
+- HP Photosmart b8558 Photo Printer
+- HP photosmart c309a
+- HP Photosmart c309a Series
+- HP photosmart c3100
+- HP Photosmart c3100 Series
+- HP Photosmart c3110 All-in-one Printer
+- HP Photosmart c3125 All-in-one Printer
+- HP Photosmart c3135 All-in-one Printer
+- HP Photosmart c3140 All-in-one Printer
+- HP Photosmart c3150 All-in-one Printer
+- HP Photosmart c3170 All-in-one Printer
+- HP Photosmart c3173 All-in-one Printer
+- HP Photosmart c3175 All-in-one Printer
+- HP Photosmart c3180 All-in-one Printer
+- HP Photosmart c3183 All-in-one Printer
+- HP Photosmart c3188 All-in-one Printer
+- HP Photosmart c3190 All-in-one Printer
+- HP Photosmart c3193 All-in-one Printer
+- HP Photosmart c3194 All-in-one Printer
+- HP photosmart c4100
+- HP Photosmart c4100 Series
+- HP Photosmart c4110 All-in-one Printer
+- HP Photosmart c4140 All-in-one Printer
+- HP Photosmart c4150 All-in-one Printer
+- HP Photosmart c4170 All-in-one Printer
+- HP Photosmart c4173 All-in-one Printer
+- HP Photosmart c4175 All-in-one Printer
+- HP Photosmart c4180 All-in-one Printer
+- HP Photosmart c4183 All-in-one Printer
+- HP Photosmart c4188 All-in-one Printer
+- HP Photosmart c4190 All-in-one Printer
+- HP Photosmart c4193 All-in-one Printer
+- HP Photosmart c4194 All-in-one Printer
+- HP photosmart c4200
+- HP Photosmart c4200 Series
+- HP Photosmart c4205 All-in-one Printer
+- HP Photosmart c4210 All-in-one Printer
+- HP Photosmart c4235 All-in-one Printer
+- HP Photosmart c4240 All-in-one Printer
+- HP Photosmart c4250 All-in-one Printer
+- HP Photosmart c4270 All-in-one Printer
+- HP Photosmart c4272 All-in-one Printer
+- HP Photosmart c4273 All-in-one Printer
+- HP Photosmart c4275 All-in-one Printer
+- HP Photosmart c4280 All-in-one Printer
+- HP Photosmart c4283 All-in-one Printer
+- HP Photosmart c4285 All-in-one Printer
+- HP Photosmart c4288 All-in-one Printer
+- HP Photosmart c4293 All-in-one Printer
+- HP Photosmart c4294 All-in-one Printer
+- HP photosmart c4340
+- HP Photosmart c4340 All-in-one Printer
+- HP Photosmart c4340 Series
+- HP Photosmart c4342 All-in-one Printer
+- HP Photosmart c4343 All-in-one Printer
+- HP Photosmart c4344 All-in-one Printer
+- HP Photosmart c4345 All-in-one Printer
+- HP Photosmart c4348 All-in-one Printer
+- HP photosmart c4380
+- HP Photosmart c4380 All-in-one Printer
+- HP Photosmart c4380 Series
+- HP Photosmart c4383 All-in-one Printer
+- HP Photosmart c4384 All-in-one Printer
+- HP Photosmart c4385 All-in-one Printer
+- HP Photosmart c4388 All-in-one Printer
+- HP photosmart c4400
+- HP Photosmart c4400 Series
+- HP Photosmart c4410 All-in-one Printer
+- HP Photosmart c4424 All-in-one Printer
+- HP Photosmart c4435 All-in-one Printer
+- HP Photosmart c4440 All-in-one Printer
+- HP Photosmart c4450 All-in-one Printer
+- HP Photosmart c4470 All-in-one Printer
+- HP Photosmart c4472 All-in-one Printer
+- HP Photosmart c4473 All-in-one Printer
+- HP Photosmart c4480 All-in-one Printer
+- HP Photosmart c4483 All-in-one Printer
+- HP Photosmart c4485 All-in-one Printer
+- HP Photosmart c4486 All-in-one Printer
+- HP Photosmart c4488 All-in-one Printer
+- HP Photosmart c4490 All-in-one Printer
+- HP Photosmart c4493 All-in-one Printer
+- HP Photosmart c4494 All-in-one Printer
+- HP photosmart c4500
+- HP Photosmart c4500 Series
+- HP Photosmart c4540 All-in-one Printer
+- HP Photosmart c4550 All-in-one Printer
+- HP Photosmart c4570 All-in-one Printer
+- HP Photosmart c4572 All-in-one Printer
+- HP Photosmart c4573 All-in-one Printer
+- HP Photosmart c4575 All-in-one Printer
+- HP Photosmart c4580 All-in-one Printer
+- HP Photosmart c4583 All-in-one Printer
+- HP Photosmart c4585 All-in-one Printer
+- HP Photosmart c4588 All-in-one Printer
+- HP Photosmart c4593 All-in-one Printer
+- HP Photosmart c4599 All-in-one Printer
+- HP photosmart c4600
+- HP Photosmart c4600 Series
+- HP Photosmart c4610 All-in-one Printer
+- HP Photosmart c4635 All-in-one Printer
+- HP Photosmart c4640 All-in-one Printer
+- HP Photosmart c4650 All-in-one Printer
+- HP Photosmart c4670 All-in-one Printer
+- HP Photosmart c4673 All-in-one Printer
+- HP Photosmart c4680 All-in-one Printer
+- HP Photosmart c4683 All-in-one Printer
+- HP Photosmart c4688 All-in-one Printer
+- HP photosmart c4700
+- HP Photosmart c4700 Series
+- HP Photosmart c4740 All-in-one Printer
+- HP Photosmart c4750 All-in-one Printer
+- HP Photosmart c4780 All-in-one Printer
+- HP Photosmart c4783 All-in-one Printer
+- HP Photosmart c4785 All-in-one Printer
+- HP Photosmart c4788 All-in-one Printer
+- HP Photosmart c4793 All-in-one Printer
+- HP Photosmart c4795 All-in-one Printer
+- HP Photosmart c4798 All-in-one Printer
+- HP Photosmart c4799 All-in-one Printer
+- HP photosmart c5100
+- HP Photosmart c5100 Series
+- HP Photosmart c5140 All-in-one Printer
+- HP Photosmart c5150 All-in-one Printer
+- HP Photosmart c5170 All-in-one Printer
+- HP Photosmart c5173 All-in-one Printer
+- HP Photosmart c5175 All-in-one Printer
+- HP Photosmart c5180 All-in-one Printer
+- HP Photosmart c5183 All-in-one Printer
+- HP Photosmart c5185 All-in-one Printer
+- HP Photosmart c5188 All-in-one Printer
+- HP Photosmart c5194 All-in-one Printer
+- HP photosmart c5200
+- HP Photosmart c5200 Series
+- HP Photosmart c5240 All-in-one Printer
+- HP Photosmart c5250 All-in-one Printer
+- HP Photosmart c5270 All-in-one Printer
+- HP Photosmart c5273 All-in-one Printer
+- HP Photosmart c5275 All-in-one Printer
+- HP Photosmart c5280 All-in-one Printer
+- HP Photosmart c5283 All-in-one Printer
+- HP Photosmart c5288 All-in-one Printer
+- HP Photosmart c5290 All-in-one Printer
+- HP Photosmart c5293 All-in-one Printer
+- HP photosmart c5300
+- HP Photosmart c5300 Series
+- HP Photosmart c5370 All-in-one Printer
+- HP Photosmart c5373 All-in-one Printer
+- HP Photosmart c5380 All-in-one Printer
+- HP Photosmart c5383 All-in-one Printer
+- HP Photosmart c5388 All-in-one Printer
+- HP Photosmart c5390 All-in-one Printer
+- HP Photosmart c5393 All-in-one Printer
+- HP photosmart c5500
+- HP Photosmart c5500 Series
+- HP Photosmart c5540 All-in-one Printer
+- HP Photosmart c5550 All-in-one Printer
+- HP Photosmart c5570 All-in-one Printer
+- HP Photosmart c5580 All-in-one Printer
+- HP photosmart c6100
+- HP Photosmart c6100 Series
+- HP Photosmart c6150 All-in-one Printer
+- HP Photosmart c6154 All-in-one Printer
+- HP Photosmart c6170 All-in-one Printer
+- HP Photosmart c6175 All-in-one Printer
+- HP Photosmart c6180 All-in-one Printer
+- HP Photosmart c6183 All-in-one Printer
+- HP Photosmart c6185 All-in-one Printer
+- HP Photosmart c6188 All-in-one Printer
+- HP Photosmart c6190 All-in-one Printer
+- HP photosmart c6200
+- HP Photosmart c6200 Series
+- HP Photosmart c6240 All-in-one Printer
+- HP Photosmart c6245 All-in-one Printer
+- HP Photosmart c6250 All-in-one Printer
+- HP Photosmart c6260 All-in-one Printer
+- HP Photosmart c6263 All-in-one Printer
+- HP Photosmart c6268 All-in-one Printer
+- HP Photosmart c6270 All-in-one Printer
+- HP Photosmart c6275 All-in-one Printer
+- HP Photosmart c6280 All-in-one Printer
+- HP Photosmart c6283 All-in-one Printer
+- HP Photosmart c6285 All-in-one Printer
+- HP Photosmart c6286 All-in-one Printer
+- HP Photosmart c6288 All-in-one Printer
+- HP photosmart c6300
+- HP Photosmart c6300 Series
+- HP Photosmart c6324 All-in-one Printer
+- HP Photosmart c6340 All-in-one Printer
+- HP Photosmart c6350 All-in-one Printer
+- HP Photosmart c6375 All-in-one Printer
+- HP Photosmart c6380 All-in-one Printer
+- HP Photosmart c6383 All-in-one Printer
+- HP Photosmart c6388 All-in-one Printer
+- HP photosmart c7100
+- HP Photosmart c7100 Series
+- HP Photosmart c7150 All-in-one Printer
+- HP Photosmart c7154 All-in-one Printer
+- HP Photosmart c7170 All-in-one Printer
+- HP Photosmart c7180 All-in-one Printer
+- HP Photosmart c7183 All-in-one Printer
+- HP Photosmart c7185 All-in-one Printer
+- HP Photosmart c7188 All-in-one Printer
+- HP Photosmart c7190 All-in-one Printer
+- HP photosmart c7200
+- HP Photosmart c7200 Series
+- HP Photosmart c7250 All-in-one Printer
+- HP Photosmart c7275 All-in-one Printer
+- HP Photosmart c7280 All-in-one Printer
+- HP Photosmart c7283 All-in-one Printer
+- HP Photosmart c7288 All-in-one Printer
+- HP photosmart c8100
+- HP Photosmart c8100 Series
+- HP Photosmart c8150 All-in-one Printer
+- HP Photosmart c8180 All-in-one Printer
+- HP Photosmart c8183 All-in-one Printer
+- HP Photosmart c8188 All-in-one Printer
+- HP photosmart d110
+- HP Photosmart d110 Series
+- HP photosmart d5060
+- HP Photosmart d5060 Printer
+- HP Photosmart d5060 Series
+- HP Photosmart d5063 Printer
+- HP Photosmart d5065 Printer
+- HP Photosmart d5069 Printer
+- HP photosmart d5100
+- HP Photosmart d5100 Series
+- HP Photosmart d5145 Printer
+- HP Photosmart d5155 Printer
+- HP Photosmart d5156 Printer
+- HP Photosmart d5160 Printer
+- HP Photosmart d5163 Printer
+- HP Photosmart d5168 Printer
+- HP photosmart d5300
+- HP Photosmart d5300 Series
+- HP Photosmart d5345 Printer
+- HP Photosmart d5360 Printer
+- HP Photosmart d5363 Printer
+- HP Photosmart d5368 Printer
+- HP photosmart d5400
+- HP Photosmart d5400 Series
+- HP Photosmart d5460 Printer
+- HP Photosmart d5463 Printer
+- HP Photosmart d5468 Printer
+- HP photosmart d6100
+- HP Photosmart d6100 Series
+- HP Photosmart d6160 Printer
+- HP Photosmart d6163 Printer
+- HP Photosmart d6168 Printer
+- HP photosmart d7100
+- HP Photosmart d7100 Series
+- HP Photosmart d7145 Printer
+- HP Photosmart d7155 Printer
+- HP Photosmart d7160 Printer
+- HP Photosmart d7163 Printer
+- HP Photosmart d7168 Printer
+- HP photosmart d7200
+- HP Photosmart d7200 Series
+- HP Photosmart d7245 Printer
+- HP Photosmart d7255 Printer
+- HP Photosmart d7260 Printer
+- HP Photosmart d7263 Printer
+- HP Photosmart d7268 Printer
+- HP photosmart d7300
+- HP Photosmart d7300 Series
+- HP Photosmart d7345 Printer
+- HP Photosmart d7355 Printer
+- HP Photosmart d7360 Printer
+- HP Photosmart d7363 Printer
+- HP Photosmart d7368 Printer
+- HP photosmart d7400
+- HP Photosmart d7400 Series
+- HP Photosmart d7460 Printer
+- HP Photosmart d7463 Printer
+- HP Photosmart d7468 Printer
+- HP photosmart d7500
+- HP Photosmart d7500 Series
+- HP photosmart estn c510
+- HP Photosmart Estn c510 Series
+- HP Photosmart Ink Adv k510
+- HP Photosmart p1000
+- HP Photosmart p1000/1000 Printer
+- HP Photosmart p1000xi Printer
+- HP Photosmart p1100
+- HP Photosmart p1100 Printer
+- HP Photosmart p1100xi Printer
+- HP Photosmart Plus All-in-one Printer - b209a
+- HP Photosmart Plus All-in-one Printer - b209b
+- HP Photosmart Plus All-in-one Printer - b209c
+- HP Photosmart Plus b209a-m
+- HP photosmart plus b210
+- HP Photosmart Plus b210 Series
+- HP photosmart prem c310
+- HP Photosmart Prem c310 Series
+- HP photosmart prem c410
+- HP Photosmart Prem c410 Series
+- HP Photosmart Prem-web c309n-s
+- HP Photosmart Premium All-in-one Printer - c309g
+- HP Photosmart Premium All-in-one Printer - c309h
+- HP Photosmart Premium c309g-m
+- HP Photosmart Premium Fax All-in-one Printer -c309a
+- HP Photosmart Premium Fax All-in-one Printer -c309c
+- HP photosmart pro b8300
+- HP Photosmart Pro b8300 Series
+- HP Photosmart Pro b8330 Printer
+- HP Photosmart Pro b8338 Printer
+- HP Photosmart Pro b8350 Printer
+- HP Photosmart Pro b8353 Printer
+- HP photosmart pro b8800
+- HP Photosmart Pro b8800 Series
+- HP Photosmart Wireless All-in-one Printer - b109n
+- HP Photosmart Wireless All-in-one Printer - b109q
+- HP Photosmart Wireless All-in-one Printer - b109qr
+- HP Photosmart Wireless b109n-z
+
+#### HP PSC
+
+- HP PSC 500
+- HP PSC 500 All-in-one Printer
+- HP PSC 500xi All-in-one Printer
+- HP PSC 720
+- HP PSC 750
+- HP PSC 750xi
+- HP PSC 760
+- HP PSC 780
+- HP PSC 780xi
+- HP psc 900
+- HP PSC 900 Series
+- HP PSC 920
+- HP PSC 950
+- HP PSC 950vr
+- HP PSC 950xi
+- HP psc 1000
+- HP PSC 1000 Series
+- HP psc 1100
+- HP PSC 1100 Series
+- HP PSC 1110 All-in-one Printer
+- HP PSC 1110v All-in-one Printer
+- HP PSC 1118 All-in-one Printer
+- HP psc 1200
+- HP PSC 1200 All-in-one Printer
+- HP PSC 1200 Series
+- HP PSC 1205 All-in-one Printer
+- HP PSC 1209 All-in-one Printer
+- HP PSC 1210 All-in-one Printer
+- HP PSC 1210v All-in-one Printer
+- HP PSC 1210xi All-in-one Printer
+- HP PSC 1213 All-in-one Printer
+- HP PSC 1215 All-in-one Printer
+- HP PSC 1216 All-in-one Printer
+- HP PSC 1217 All-in-one Printer
+- HP PSC 1218 All-in-one Printer
+- HP PSC 1219 All-in-one Printer
+- HP psc 1300
+- HP PSC 1300 All-in-one Printer
+- HP PSC 1300 Series
+- HP psc 1310
+- HP PSC 1310 All-in-one Printer
+- HP PSC 1310 Series
+- HP PSC 1311 All-in-one Printer
+- HP PSC 1312 All-in-one Printer
+- HP PSC 1315 All-in-one Printer
+- HP PSC 1315s All-in-one Printer
+- HP PSC 1315v All-in-one Printer
+- HP PSC 1315xi All-in-one Printer
+- HP PSC 1317 All-in-one Printer
+- HP PSC 1318 All-in-one Printer
+- HP PSC 1340 All-in-one Printer
+- HP PSC 1350 All-in-one Printer
+- HP PSC 1350v All-in-one Printer
+- HP PSC 1350xi All-in-one Printer
+- HP PSC 1355 All-in-one Printer
+- HP psc 1358
+- HP PSC 1358 Series
+- HP psc 1400
+- HP PSC 1400 Series
+- HP PSC 1401 All-in-one Printer
+- HP PSC 1402 All-in-one Printer
+- HP PSC 1403 All-in-one Printer
+- HP PSC 1406 All-in-one Printer
+- HP PSC 1408 All-in-one Printer
+- HP PSC 1410 All-in-one Printer
+- HP PSC 1410v All-in-one Printer
+- HP PSC 1410xi All-in-one Printer
+- HP PSC 1415 All-in-one Printer
+- HP PSC 1417 All-in-one Printer
+- HP psc 1500
+- HP PSC 1500 Series
+- HP PSC 1508 All-in-one Printer
+- HP PSC 1510
+- HP PSC 1510 All-in-one Printer
+- HP PSC 1510s All-in-one Printer
+- HP PSC 1510v All-in-one Printer
+- HP PSC 1510xi All-in-one Printer
+- HP PSC 1513 All-in-one Printer
+- HP PSC 1513s All-in-one Printer
+- HP PSC 1514 All-in-one Printer
+- HP psc 1600
+- HP PSC 1600 All-in-one Printer
+- HP PSC 1600 Series
+- HP PSC 1603 All-in-one Printer
+- HP PSC 1605 All-in-one Printer
+- HP PSC 1608 All-in-one Printer
+- HP PSC 1610 All-in-one Printer
+- HP PSC 1610v All-in-one Printer
+- HP PSC 1610xi All-in-one Printer
+- HP PSC 1613 All-in-one Printer
+- HP PSC 1615 All-in-one Printer
+- HP psc 2100
+- HP PSC 2100 Series
+- HP PSC 2105 All-in-one Printer
+- HP PSC 2108 All-in-one Printer
+- HP PSC 2110 All-in-one Printer
+- HP PSC 2110v All-in-one Printer
+- HP PSC 2110xi All-in-one Printer
+- HP PSC 2115 All-in-one Printer
+- HP psc 2150
+- HP PSC 2150 Series
+- HP psc 2170
+- HP PSC 2170 All-in-one Printer
+- HP PSC 2170 Series
+- HP PSC 2171 All-in-one Printer
+- HP PSC 2175 All-in-one Printer
+- HP PSC 2175v All-in-one Printer
+- HP PSC 2175xi All-in-one Printer
+- HP PSC 2179 All-in-one Printer
+- HP psc 2200
+- HP PSC 2200 Series
+- HP psc 2210
+- HP PSC 2210 All-in-one Printer
+- HP PSC 2210 Series
+- HP PSC 2210v All-in-one Printer
+- HP PSC 2210xi All-in-one Printer
+- HP psc 2300
+- HP PSC 2300 All-in-one Printer
+- HP PSC 2300 Series
+- HP PSC 2310 All-in-one Printer
+- HP psc 2350
+- HP PSC 2350 All-in-one Printer
+- HP PSC 2350 Series
+- HP PSC 2352 All-in-one Printer
+- HP PSC 2353 All-in-one Printer
+- HP PSC 2353p All-in-one Printer
+- HP PSC 2355 All-in-one Printer
+- HP PSC 2355p All-in-one Printer
+- HP PSC 2355v All-in-one Printer
+- HP PSC 2355xi All-in-one Printer
+- HP PSC 2357 All-in-one Printer
+- HP PSC 2358 All-in-one Printer
+- HP psc 2400
+- HP PSC 2400 Series
+- HP PSC 2405 Photosmart All-in-one Printer
+- HP PSC 2410 Photosmart All-in-one Printer
+- HP PSC 2410v Photosmart All-in-one Printer
+- HP PSC 2410xi Photosmart All-in-one Printer
+- HP PSC 2420 Photosmart All-in-one Printer
+- HP PSC 2450 Photosmart All-in-one Printer
+- HP psc 2500
+- HP PSC 2500 Photosmart All-in-one Printer
+- HP PSC 2500 Series
+- HP PSC 2510 Photosmart All-in-one Printer
+- HP PSC 2510xi Photosmart All-in-one Printer
+- HP PSC 2550 Photosmart All-in-one Printer
+
+#### Other HP printers
+
+- HP 910
+- HP 915
+- HP 2000c
+- HP 2000c Printer
+- HP 2000cn Printer
+- HP 2000cse Printer
+- HP 2000cxi Printer
+- HP 2500c
+- HP 2500c Plus Printer
+- HP 2500c Printer
+- HP 2500cm Printer
+- HP 2500cse Printer
+- HP 2500cxi Printer
+- HP Amp
+- HP Amp 130 All-in-one
+- HP Amp All-in-one
+- HP CM8050 CM8060 Color MFP with Edgeline Technology
+- HP CM8050 Color MFP
+- HP CM8050 MFP with Edgeline
+- HP CM8060 Color MFP
+- HP CM8060 MFP with Edgeline
+- HP Color Inkjet cp1160 Printer
+- HP Color Inkjet cp1160tn Printer
+- HP Color Inkjet cp1700 Printer
+- HP Color Inkjet cp1700d Printer
+- HP Color Inkjet cp1700ps Printer
+- HP Color Inkjet Printer cp1700
+- HP Color MFP 8801
+- HP Color MFP E786-25-30-35
+- HP Color MFP E877-40-50-60-70
+- HP Color MFP E78625-30-35
+- HP Color MFP E87740-50-60-70
+- HP cp1160
+- HP D50352
+- HP DEX D50352
+- HP DEX MFP D53052
+- HP dj350
+- HP dj450
+- HP ink tank 110
+- HP Ink Tank 110 Series
+- HP Ink Tank 310
+- HP Ink Tank 310 Series
+- HP Ink Tank Wireless 410
+- HP Ink Tank Wireless 410 Series
+- HP Lasejet m211d
+- HP Laser Ns 1020
+- HP Laser Ns 1020n
+- HP Laser Ns 1020w
+- HP Laser Ns MFP 1005
+- HP Laser Ns MFP 1005n
+- HP Laser Ns MFP 1005w
+- HP LJ 300-400 color M351-M451
+- HP LJ 300-400 color MFP M375-M475
+- HP MFP D53052
+- HP Mopier 240
+- HP Mopier 320
+- HP Neverstop Laser 100x
+- HP Neverstop Laser 1000a
+- HP Neverstop Laser 1000n
+- HP Neverstop Laser 1000w
+- HP Neverstop Laser 1001nw
+- HP Neverstop Laser MFP 120x
+- HP Neverstop Laser MFP 1200a
+- HP Neverstop Laser MFP 1200n
+- HP Neverstop Laser MFP 1200nw
+- HP Neverstop Laser MFP 1200w
+- HP Neverstop Laser MFP 1201n
+- HP Neverstop Laser MFP 1202nw
+- HP Photsmart 6520 E All-in-one
+- HP Printer Scanner Copier 300
+- HP smart tank 210-220
+- HP Smart Tank 210-220 Series
+- HP Smart Tank 350
+- HP Smart Tank 350 Series
+- HP smart tank 500
+- HP Smart Tank 500 Series
+- HP Smart Tank 510
+- HP Smart Tank 510 Series
+- HP smart tank 520 540
+- HP Smart Tank 520 540 Series
+- HP smart tank 530
+- HP Smart Tank 530 Series
+- HP smart tank 580-590
+- HP Smart Tank 580-590 Series
+- HP Smart Tank 610
+- HP Smart Tank 610 Series
+- HP smart tank 660-670
+- HP Smart Tank 660-670 Series
+- HP smart tank 710-720
+- HP Smart Tank 710-720 Series
+- HP Smart Tank 750
+- HP Smart Tank 750 Series
+- HP Smart Tank 790
+- HP Smart Tank 790 Series
+- HP smart tank 5100
+- HP Smart Tank 5100 Series
+- HP smart tank 6000
+- HP Smart Tank 6000 Series
+- HP smart tank 7000
+- HP Smart Tank 7000 Series
+- HP smart tank 7300
+- HP Smart Tank 7300 Series
+- HP Smart Tank 7600
+- HP Smart Tank 7600 Series
+- HP Smart Tank Plus 550
+- HP Smart Tank Plus 550 Series
+- HP smart tank plus 570
+- HP Smart Tank Plus 570 Series
+- HP Smart Tank Plus 650
+- HP Smart Tank Plus 650 Series
+- HP Smart Tank Wireless 450
+- HP Smart Tank Wireless 450 Series
+- HP Tango
+- HP Tango X
