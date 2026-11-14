@@ -52,6 +52,29 @@ generally use driverless IPP via USB, try
 first.
 
 
+## Supported printers
+
+This application provides printing support declared by HP's HPLIP driver suite (**3,875 searchable model and series names**, including 113 requiring the HP proprietary plugin and 3 generic PostScript classes).
+This represents driver-declared support, not a claim of hardware testing. Scanning and fax are not supported.
+
+The complete searchable directory of models, proprietary plugin flags, and source provenance is in [**SUPPORTED-PRINTERS.md**](SUPPORTED-PRINTERS.md).
+
+### Table of Contents by Series
+
+- [Generic HP PostScript classes](SUPPORTED-PRINTERS.md#generic-hp-postscript-classes)
+- [Apollo](SUPPORTED-PRINTERS.md#apollo)
+- [HP Business Inkjet](SUPPORTED-PRINTERS.md#hp-business-inkjet)
+- [HP Color LaserJet](SUPPORTED-PRINTERS.md#hp-color-laserjet)
+- [HP DesignJet](SUPPORTED-PRINTERS.md#hp-designjet)
+- [HP DeskJet](SUPPORTED-PRINTERS.md#hp-deskjet)
+- [HP ENVY](SUPPORTED-PRINTERS.md#hp-envy)
+- [HP LaserJet](SUPPORTED-PRINTERS.md#hp-laserjet)
+- [HP OfficeJet](SUPPORTED-PRINTERS.md#hp-officejet)
+- [HP PageWide](SUPPORTED-PRINTERS.md#hp-pagewide)
+- [HP Photosmart](SUPPORTED-PRINTERS.md#hp-photosmart)
+- [HP PSC](SUPPORTED-PRINTERS.md#hp-psc)
+- [Other HP printers](SUPPORTED-PRINTERS.md#other-hp-printers)
+
 ## Project Bluefin FSDK OCI appliance
 
 Upstream `snap/` and `rockcraft.yaml` remain as source references, but this
