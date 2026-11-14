@@ -152,6 +152,16 @@ firmware is part of the image. Keep the volume private to its numeric owner.
 An empty volume starts with the optional plugin not installed; an unreadable
 status file still produces an error log.
 
+The shared, noncritical countme reporter sends an anonymous HTTPS `PUT` to
+`https://countme.projectbluefin.io/v1/ping` with only
+`{"image":"hplip-printer-app/main:unknown"}`. This measures an active reporting
+app installation per UTC calendar day, not unique hosts, physical printers,
+or print jobs. A successful report records the UTC day in the state volume
+so a restart that day does not report again. Keep the same state when
+disabling and re-enabling an instance in ChairLift. The stream is `unknown`
+because an image digest does not identify its release tag; reporting failure
+does not stop printing.
+
 The image does not run `cupsd` and creates no print queue on the host. After
 adding a printer in the web UI, the appliance advertises it on the LAN via
 DNS-SD (`_ipp._tcp`) as a driverless IPP Everywhere printer at

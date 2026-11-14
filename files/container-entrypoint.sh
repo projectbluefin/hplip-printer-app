@@ -97,9 +97,12 @@ export TESTPAGE_DIR=/usr/share/hplip-printer-app
 export TMPDIR=/tmp
 export USB_QUIRK_DIR="$state"
 
+source /usr/libexec/printer-app/entrypoint-common.sh
+
 children=()
 stop_children() {
   local index pid
+  declare -F printer_app_stop_countme >/dev/null && printer_app_stop_countme
   for ((index = ${#children[@]} - 1; index >= 0; index--)); do
     pid="${children[index]}"
     kill -TERM "$pid" 2>/dev/null || true
@@ -134,6 +137,7 @@ done
 
 hplip-printer-app -o "server-port=$port" -o "log-file=$state/hplip-printer-app.log" "${extra_opts[@]}" server &
 children+=("$!")
+declare -F printer_app_start_countme >/dev/null && printer_app_start_countme "$state" hplip-printer-app
 
 if wait -n "${children[@]}"; then
   status=1
