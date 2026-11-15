@@ -24,6 +24,8 @@ bst *ARGS:
         bash -c 'bst "$@"' -- --no-interactive ${BST_FLAGS:-} {{ ARGS }}
 
 validate:
+    tests/source-pins.sh
+    tests/fsdk-pin.sh
     just bst show --deps all oci/hplip-printer-app.bst
     just check-entrypoint
 

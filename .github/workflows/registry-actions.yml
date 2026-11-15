@@ -48,12 +48,11 @@ jobs:
           [[ "$upstream_source" == "$upstream_version" ]]
           junction_ref="$(sed -n -E 's/^[[:space:]]*ref: (.*-g)?([0-9a-f]{40})$/\2/p' elements/fsdk-containers.bst)"
           [[ "$junction_ref" =~ ^[0-9a-f]{40}$ ]]
-          upstream="$(mktemp -d)"
-          trap 'rm -rf "$upstream"' EXIT
-          git -C "$upstream" init -q
-          git -C "$upstream" fetch -q --depth=1 https://github.com/projectbluefin/fsdk-containers.git "$junction_ref"
-          junction="$(git -C "$upstream" show FETCH_HEAD:elements/freedesktop-sdk.bst)"
-          read -r fsdk_version fsdk_ref <<< "$(sed -n 's/^[[:space:]]*ref: freedesktop-sdk-\(.*\)-0-g\([0-9a-f]\{40\}\)$/\1 \2/p' <<< "$junction")"
+          # Same derivation as tests/source-pins.sh, which `just validate`
+          # runs on every pull request. Assign first: a failure inside a
+          # here-string's $(...) would not stop set -e.
+          fsdk_pin="$(scripts/fsdk-pin.sh "$junction_ref")"
+          read -r fsdk_version fsdk_ref <<< "$fsdk_pin"
           [[ -n "$fsdk_version" && "$fsdk_ref" =~ ^[0-9a-f]{40}$ ]]
           # FSDK labels come from the pinned junction, so a bare ref bump of
           # elements/fsdk-containers.bst is a complete update.
