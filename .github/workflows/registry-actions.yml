@@ -300,7 +300,24 @@ jobs:
           [[ "$sbom_digest" == sha256:* ]]
           cosign sign --yes "${IMAGE}@${sbom_digest}"
           echo "sbom-digest=$sbom_digest" >> "$GITHUB_OUTPUT"
-      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+      # The public transparency log sometimes fails to return an entry it
+      # has just accepted ("error fetching tlog entry - (404) Not Found",
+      # #246). Attest once more after a pause; the verify step below still
+      # refuses to tag an image whose provenance is missing.
+      - name: Attest build provenance
+        id: attest
+        continue-on-error: true
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ steps.image.outputs.name }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true
+      - name: Wait before retrying the provenance attestation
+        if: steps.attest.outcome == 'failure'
+        run: sleep 60
+      - name: Attest build provenance (retry)
+        if: steps.attest.outcome == 'failure'
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ${{ steps.image.outputs.name }}
           subject-digest: ${{ steps.image.outputs.digest }}
