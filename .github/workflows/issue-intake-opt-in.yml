@@ -1,0 +1,57 @@
+# The bug and feature issue forms add needs-human to every new issue, which keeps agents away
+# from it. The form's "Automation preference" answer decides whether it stays: this removes
+# needs-human when the reporter chose "Machine analysis is welcome" or "No preference", and
+# leaves it for "Human interaction only", a missing heading, or any other answer.
+# Runs on opened only, never edited: a maintainer who re-adds needs-human later keeps it.
+# Security baseline: permissions: {} at the top, write scopes granted per job. The issue body
+# reaches the script only through env:, never through an expression inside run:.
+name: Issue intake opt-in
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  apply-automation-preference:
+    if: contains(github.event.issue.labels.*.name, 'needs-human')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Remove needs-human unless the reporter chose human interaction only
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Prints the first non-empty line after the "### Automation preference" heading,
+          # trimmed; prints nothing when the heading is missing.
+          automation_preference() {
+            awk '
+              { sub(/\r$/, "") }
+              found && NF { sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); print; exit }
+              /^### Automation preference[ \t]*$/ { found = 1 }
+            '
+          }
+
+          answer="$(printf '%s\n' "$ISSUE_BODY" | automation_preference)"
+          case "$answer" in
+            "Machine analysis is welcome" | "No preference")
+              gh issue edit "$NUMBER" -R "$REPO" --remove-label needs-human
+              echo "Removed needs-human from #$NUMBER: the reporter chose \"$answer\"."
+              ;;
+            "Human interaction only")
+              echo "Kept needs-human on #$NUMBER: the reporter chose \"$answer\"."
+              ;;
+            "")
+              echo "Kept needs-human on #$NUMBER: no Automation preference answer in the body."
+              ;;
+            *)
+              echo "Kept needs-human on #$NUMBER: unrecognized Automation preference answer."
+              ;;
+          esac
