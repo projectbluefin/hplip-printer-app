@@ -315,7 +315,7 @@ port=8000
 state=/state-dir
 extra_opts=()
 children=()
-hplip-printer-app() { sleep 30; }
+hplip-printer-app() { exec sleep 30; }
 printer_app_start_countme() {
     printf "%s %s children=%s\n" "$1" "$2" "${#children[@]}" >>"$calls"
 }
