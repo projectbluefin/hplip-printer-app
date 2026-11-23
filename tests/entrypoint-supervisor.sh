@@ -273,6 +273,64 @@ else
     printf 'ok: the EXIT trap stops the children and preserves the exit status\n'
 fi
 
+# --- the countme stop hook runs once, before any daemon is signalled --------
+#
+# The shared entrypoint library may define printer_app_stop_countme. When it
+# does, stop_children() must call it exactly once and before the first TERM, so
+# the usage reporter never outlives the daemons it reports for. The pinned
+# library does not define it yet, so this branch runs in no image test.
+
+run_sync stop-countme 3 '
+printer_app_stop_countme() { printf "countme\n" >>"$order"; }
+stop_children
+trap - EXIT
+'
+if [ "$run_status" != 0 ]; then
+    report "stop_children with the countme hook exits $run_status, expected 0"
+elif [ "$(signal_order)" != 'countme child3 child2 child1' ]; then
+    report "stop_children with the countme hook ran '$(signal_order)', expected 'countme child3 child2 child1'"
+elif [ "$(stopped_children)" != 'child1 child2 child3' ]; then
+    report "stop_children with the countme hook stopped '$(stopped_children)', expected every child"
+else
+    printf 'ok: the countme stop hook runs once before the daemons are stopped\n'
+fi
+
+# --- the countme start hook runs once, after the server is launched ----------
+#
+# printer_app_start_countme must receive the state directory and this app's
+# name, and run only after hplip-printer-app is a recorded child. Slice the
+# launch block (server start through the line before "wait -n") and run it
+# with a stand-in server.
+
+launch_start="$(line_of '^hplip-printer-app .* server &$')"
+launch_end="$(line_of '^if wait -n ')"
+launch="$work/launch.sh"
+sed -n "${launch_start},$((launch_end - 1))p" "$entrypoint" >"$launch"
+launch_calls="$work/launch.calls"
+: >"$launch_calls"
+launch_status=0
+timeout 30 bash -euo pipefail -c '
+calls="$1"
+port=8000
+state=/state-dir
+extra_opts=()
+children=()
+hplip-printer-app() { exec sleep 30; }
+printer_app_start_countme() {
+    printf "%s %s children=%s\n" "$1" "$2" "${#children[@]}" >>"$calls"
+}
+. "$2"
+kill "${children[@]}" 2>/dev/null || true
+' launch "$launch_calls" "$launch" || launch_status=$?
+launch_got="$(cat "$launch_calls")"
+if [ "$launch_status" != 0 ]; then
+    report "the launch block with the countme hook exits $launch_status, expected 0"
+elif [ "$launch_got" != '/state-dir hplip-printer-app children=1' ]; then
+    report "countme start calls: '${launch_got:-none}', expected '/state-dir hplip-printer-app children=1'"
+else
+    printf 'ok: the countme start hook runs once after the server, with the state directory and app name\n'
+fi
+
 # --- SIGTERM and SIGINT exit 143 with the children stopped exactly once ------
 #
 # 143 is 128+SIGTERM, which podman stop and Kubernetes read as "stopped on
