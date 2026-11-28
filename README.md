@@ -183,9 +183,15 @@ unverified without supported hardware.
 
 ### Authenticating or disabling the web admin interface
 
-Because this appliance runs with `--network host`, the web admin UI is
-LAN-reachable and the only boundary is authorization. By default PAPPL
-leaves it open to anyone who can reach the port. Set one of the following
+The web administration and log pages are not open to the network the way
+printing is. This appliance runs with `--network host`, so IPP printing and
+DNS-SD advertising reach any client on the host's network, but the admin and
+log pages answer only a client connecting through the host itself (loopback).
+The PAPPL this image ships (1.4.13) refuses remote administration by default:
+any machine that is not the host itself gets `403 Forbidden` on the admin and
+log pages, because opening them needs a remote-administration option set, and
+this image's entrypoint does not let one be set. Only a process running on the
+host can open those pages without a credential. Set one of the following
 before starting the container; the entrypoint validates every value and
 stops instead of ever falling back to an unauthenticated admin UI (exit `64`
 for a malformed value, `78` for a value this image cannot honour):
@@ -206,11 +212,14 @@ for a malformed value, `78` for a value this image cannot honour):
   disables the web admin UI entirely while IPP printing keeps working.
 
 `PRINTER_APP_SERVER_OPTIONS=no-web-interface` is therefore the only supported
-way to secure the web admin interface today. It also removes the per-printer
-"Device Settings" page that pappl-retrofit registers, the proprietary plugin
-page (`/plugin`) and PAPPL's log views (`/logs`, `/logfile.txt`), so every web
-route answers `404` while IPP printing keeps working. `tests/oci-appliance.sh`
-verifies that against the built image.
+way to remove the web admin interface today. It goes further than the default:
+where the admin and log pages already answer `403` to every machine other than
+the host, this option removes the per-printer "Device Settings" page that
+pappl-retrofit registers, the proprietary plugin page (`/plugin`) and PAPPL's
+log views (`/logs`, `/logfile.txt`), so every web route answers `404` while
+IPP printing keeps working. With the default settings an admin or log page
+works on the host itself and returns `403` to any other machine; `tests/oci-appliance.sh`
+verifies the `404` behaviour against the built image.
 
 ### Isolating LAN discovery and USB access between coexisting appliances
 
